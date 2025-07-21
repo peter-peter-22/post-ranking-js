@@ -12,16 +12,12 @@ const envModel=z.object({
 
     MINIO_ACCESS_KEY:z.string(),
     MINIO_SECRET_KEY:z.string(),
-
     MINIO_PUBLIC_BUCKET:z.string(), 
+    MINIO_HOST:z.string(),
+    MINIO_PORT:z.coerce.number(),
     
     MEDIA_TRANSFORMER_URL:z.string().url(),
     MEDIA_TRANSFORMER_SECRET_KEY:z.string(),
-
-    WEAVIATE_HOST:z.string(),
-    WEAVIATE_PORT:z.coerce.number(),
-    WEAVIATE_GRPC_PORT:z.coerce.number(),
-
 })
 
 export const env=envModel.parse(process.env)

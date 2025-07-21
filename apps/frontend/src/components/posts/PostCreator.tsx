@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CreatePostFormSchema, PostFormData } from "@me/schemas/zod/createPost";
+import { CreatePostFormSchema, PostFormData } from "@me/schemas/src/zod/createPost";
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
@@ -26,8 +26,9 @@ import { useMediaUpload } from '../media/useMultipleMediaUpload';
 import CharacterCounter from './CharacterCounter';
 import { ReplyingTo } from './PostContent';
 import FormRichTextEditor from './RichTextEditor/FormEditor';
-import { maxPostTextLength } from '@me/schemas/postCharacterCounter';
-import { PersonalPost, PostToEdit } from '@me/schemas/zod/post';
+import { maxPostTextLength } from '@me/schemas/src/postCharacterCounter';
+import { PersonalPost, PostToEdit } from '@me/schemas/src/zod/post';
+import { FormHelperText } from '@mui/material';
 
 export type PostCreatorProps = {
     post?: PostToEdit,
@@ -52,7 +53,7 @@ function PostCreatorInner({ post, onPublish, replyingTo, successMessage = true }
     //const maxLength = 500
     const session = useMemo(() => createPostSession(post), [post])
     const { reset } = useReset()
-    const { enqueueSnackbar,closeSnackbar } = useSnackbar()
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar()
 
     // Form
     const methods = useForm<PostFormData>({
@@ -62,7 +63,8 @@ function PostCreatorInner({ post, onPublish, replyingTo, successMessage = true }
             media: post?.media || []
         }
     });
-    const { handleSubmit, getValues, setValue, formState: { isSubmitting } } = methods;
+    const { handleSubmit, getValues, setValue, control, formState: { isSubmitting, errors } } = methods;
+    console.log(errors)
     const onSubmit = async (data: PostFormData) => {
         // Check text max length
         //if (characters >= maxLength) {
@@ -80,11 +82,11 @@ function PostCreatorInner({ post, onPublish, replyingTo, successMessage = true }
         if (created.replyingTo) useMainStore.getState().updatePost(created.replyingTo, ({ replies, ...post }) => ({ ...post, replies: replies + 1 }))
         // Show success message
         if (successMessage) {
-            const key=enqueueSnackbar("Post published", {
+            const key = enqueueSnackbar("Post published", {
                 variant: "success",
                 action: <>
                     <Button href={getPostUrl(created.id, created.user.handle)} size="small" color="inherit">View</Button>
-                    <IconButton size='small' color="inherit" onClick={()=>{closeSnackbar(key)}}><CloseIcon /></IconButton>
+                    <IconButton size='small' color="inherit" onClick={() => { closeSnackbar(key) }}><CloseIcon /></IconButton>
                 </>,
             })
         }
@@ -145,9 +147,10 @@ function PostCreatorInner({ post, onPublish, replyingTo, successMessage = true }
                             handlePastedFiles: handlePaste
                         }}
                     />
+                    {errors.text && <FormHelperText error>{errors.text.message}</FormHelperText>}
                     <UploadingMediaDisplayer uploader={uploader} />
                     <Stack direction="row" gap={1}>
-                        <CharacterCounter max={maxPostTextLength} />
+                        <CharacterCounter max={maxPostTextLength} control={control} />
                         <StyledFileInput
                             onChange={handleUpload}
                             render={({ onClick }) => (

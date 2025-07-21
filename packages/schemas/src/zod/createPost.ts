@@ -7,27 +7,27 @@ export const CreatePostResponseSchema = z.object({
     created: PersonalPostSchema
 })
 
-export type CreatePostResponse=z.infer<typeof CreatePostResponseSchema>
+export type CreatePostResponse = z.infer<typeof CreatePostResponseSchema>
 
 export const UpdatePostResponseSchema = z.object({
     post: PersonalPostSchema
 })
 
-export type UpdatePostResponse=z.infer<typeof UpdatePostResponseSchema>
+export type UpdatePostResponse = z.infer<typeof UpdatePostResponseSchema>
 
 export const CreatePendingPostResponseSchma = z.object({
     id: z.string()
 })
 
-export type CreatePendingPostResponse=z.infer<typeof CreatePendingPostResponseSchma>
+export type CreatePendingPostResponse = z.infer<typeof CreatePendingPostResponseSchma>
 
 export const CreatePostFormSchema = z
     .object({
         text: z.string(),
         media: z.array(ServerMediaSchema),
     })
-    .refine(data => getEffectiveLength(data.text) > maxPostTextLength, { message: "The text is too long" })
-    .refine(data => data.text.length===0 && data.media.length===0, { message: "Either text or media is required" })
+    .refine(data => getEffectiveLength(data.text) < maxPostTextLength, { message: "The text is too long", path: ["text"] })
+    .refine(data => data.text.length !== 0 || data.media.length !== 0, { message: "Either text or media is required", path: ["text"] })
 
 export type PostFormData = z.infer<typeof CreatePostFormSchema>
 
@@ -49,4 +49,4 @@ export const UpdatePostRequestSchema = CreatePostRequestSchema.extend({
     id: z.string()
 })
 
-export type UpdatePostRequest=z.infer<typeof UpdatePostRequestSchema>
+export type UpdatePostRequest = z.infer<typeof UpdatePostRequestSchema>

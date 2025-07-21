@@ -24,7 +24,7 @@ import EditProfileBanner from "./EditProfileBanner";
 import EditProfilePicture from "./EditProfilePicture";
 import { updateUser } from "../../api/users/updateUser";
 import { acceptedImageTypes } from "../../api/media/mediaApi";
-import { ServerMediaSchema } from "@me/schemas/zod/media";
+import { ServerMediaSchema } from "@me/schemas/src/zod/media";
 
 type EditProfileType = {
     show: () => void,

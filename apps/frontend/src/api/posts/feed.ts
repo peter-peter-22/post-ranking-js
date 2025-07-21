@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { apiClient } from "../api";
-import { PersonalPostSchema } from "@me/schemas/zod/post";
+import { PersonalPostSchema } from "@me/schemas/src/zod/post";
 
 const PostListResponse = z.object({
     posts: PersonalPostSchema.array(),

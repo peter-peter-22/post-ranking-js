@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { apiClient } from "../api"
-import { PersonalPostSchema } from "@me/schemas/zod/post"
+import { PersonalPostSchema } from "@me/schemas/src/zod/post"
 
 export async function deletePost(id: string) {
     await apiClient.post("/userActions/deletePost", { id })

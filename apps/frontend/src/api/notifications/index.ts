@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { apiClient } from "../api"
-import { ServerMediaSchema } from "@me/schemas/zod/media"
+import { ServerMediaSchema } from "@me/schemas/src/zod/media"
 
 const BaseNotificationSchema = z.object({
     id: z.string(),

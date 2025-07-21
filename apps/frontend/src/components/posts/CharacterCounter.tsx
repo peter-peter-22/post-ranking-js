@@ -1,24 +1,24 @@
+import { getEffectiveLength } from "@me/schemas/src/postCharacterCounter";
+import { PostFormData } from '@me/schemas/src/zod/createPost';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
-import { Control, useForm, useWatch } from 'react-hook-form';
-import { getEffectiveLength } from "@me/schemas/postCharacterCounter"
-import { PostFormData } from '@me/schemas/zod/createPost';
+import { Control, useWatch } from 'react-hook-form';
 
 /** Count the effective length of the text of the post. */
 export function useCharacterCounter(control: Control<PostFormData>) {
-    const value = useWatch<PostFormData>({
+    const value = useWatch({
         control,
         name: "text",
+        defaultValue: ""
     })
-    return getEffectiveLength(value as string)
+    return getEffectiveLength(value)
 }
 
 /** Display the character count of the provided text. */
-export default function CharacterCounter({  max }: {  max: number }) {
-    const {control}=useForm<PostFormData>()
-    const value=useCharacterCounter(control)
+export default function CharacterCounter({ max, control }: { max: number, control: Control<PostFormData> }) {
+    const value = useCharacterCounter(control)
     const theme = useTheme()
     const progress = Math.min(value / max * 100, 100)
     const warning = progress >= 75

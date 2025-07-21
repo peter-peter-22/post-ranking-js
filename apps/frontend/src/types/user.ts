@@ -1,4 +1,4 @@
-import { ServerMediaSchema } from "@me/schemas/zod/media"
+import { ServerMediaSchema } from "@me/schemas/src/zod/media"
 import { z } from "zod"
 
 export const UserSchema=z.object({

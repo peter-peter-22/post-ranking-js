@@ -1,6 +1,6 @@
-import { CreatePendingPostResponseSchma, CreatePostRequest, CreatePostResponseSchema, FinalizePostRequest, PostFormData, UpdatePostRequest, UpdatePostResponseSchema } from "@me/schemas/zod/createPost";
-import { ServerMedia } from "@me/schemas/zod/media";
-import { PostToEdit } from "@me/schemas/zod/post";
+import { CreatePendingPostResponseSchma, CreatePostRequest, CreatePostResponseSchema, FinalizePostRequest, PostFormData, UpdatePostRequest, UpdatePostResponseSchema } from "@me/schemas/src/zod/createPost";
+import { ServerMedia } from "@me/schemas/src/zod/media";
+import { PostToEdit } from "@me/schemas/src/zod/post";
 import { getFileCategory } from "../../../components/media/getFileCategory";
 import { MediaUpload } from "../../../components/media/useMultipleMediaUpload";
 import { apiClient } from "../../api";
