@@ -8,7 +8,7 @@ export async function getSinglePost(id: string) {
         // If exists and is a reply, try to get the replied post
         if (cachedPost.replyingTo && !useMainStore.getState().posts.has(cachedPost.replyingTo)) {
             // If no replied post in zustand, fetch
-            const { post: replied, replied: other } = await fetchPost(cachedPost.replyingTo)
+            const { post: replied, replied: other } = await fetchPost({id:cachedPost.replyingTo})
             processPosts([replied])
             if (other) processPosts([other])
         }
@@ -16,7 +16,7 @@ export async function getSinglePost(id: string) {
         return cachedPost
     }
     // If no post, fetch
-    const { post: newPost, replied } = await fetchPost(id)
+    const { post: newPost, replied } = await fetchPost({id})
     processPosts([newPost])
     if (replied) processPosts([replied])
     return newPost

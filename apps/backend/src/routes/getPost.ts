@@ -1,15 +1,14 @@
+import { GetPostResponse, GetPostSchema } from "@me/schemas/src/zod/getPost";
 import { eq } from 'drizzle-orm';
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { DatabaseError } from 'pg';
 import { authRequest } from '../authentication';
 import { db } from '../db';
 import { posts } from '../db/schema/posts.js';
+import { HttpError } from '../middlewares/errorHandler';
 import { candidateColumns } from '../posts/common';
 import { personalizePosts } from '../posts/hydratePosts';
 import { postProcessPosts } from '../posts/postProcessPosts';
-import { DatabaseError } from 'pg';
-import { HttpError } from '../middlewares/errorHandler';
-import { GetPostResponse, GetPostSchema } from "@me/schemas/src/zod/getPost"
 
 const router:Router = Router();
 
