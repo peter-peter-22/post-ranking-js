@@ -3,7 +3,6 @@ import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { authRequestStrict } from '../../../authentication';
 import { db } from '../../../db';
-import { MediaFileSchema } from '../../../db/common';
 import { Post, posts } from '../../../db/schema/posts';
 import { incrementReplyCounter } from '../../../jobs/replyCount';
 import { HttpError } from '../../../middlewares/errorHandler';
@@ -13,6 +12,7 @@ import { finalizePost, insertPosts } from '../../../userActions/posts/createPost
 import { prepareAnyPost } from '../../../userActions/posts/preparePost';
 import { getOnePost } from '../../getPost';
 import { createMentionNotifications, createReplyNotification } from '../../../db/controllers/notifications/createNotification';
+import { MediaFileSchema } from '@me/schemas/src/zod/media';
 
 const router = Router();
 

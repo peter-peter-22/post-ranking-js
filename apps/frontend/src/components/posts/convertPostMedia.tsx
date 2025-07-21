@@ -1,4 +1,4 @@
-import { MediaFile, ServerMedia } from "../../types/media";
+import { MediaFile, ServerMedia } from "@me/schemas/src/zod/media";
 import { getMediaUrl } from "../../api/media/mediaApi";
 
 /** Convert media from the backend to a format that can be displayed on the client. */

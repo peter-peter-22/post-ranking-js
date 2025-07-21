@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { EditProfileForm, EditProfileFormSchema } from "@me/schemas/src/zod/createUser";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from '@mui/material/Dialog';
@@ -9,8 +10,9 @@ import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { z } from "zod";
 import { useShallow } from "zustand/react/shallow";
+import { acceptedImageTypes } from "../../api/media/mediaApi";
+import { updateUser } from "../../api/users/updateUser";
 import { uploadBanner, UploadMediaFunction, uploadProfile } from "../../api/users/uploadProfileMedia";
 import GradientButton from "../../components/buttons/GradientButton";
 import { requireUser, useMainStore } from "../../components/globalStore/mainStore";
@@ -22,9 +24,8 @@ import { getStandardGradient } from "../../utilities/getStandardGradient";
 import EditMediaDialog from "./EditMediaDialog";
 import EditProfileBanner from "./EditProfileBanner";
 import EditProfilePicture from "./EditProfilePicture";
-import { updateUser } from "../../api/users/updateUser";
-import { acceptedImageTypes } from "../../api/media/mediaApi";
-import { ServerMediaSchema } from "@me/schemas/src/zod/media";
+import { useSnackbar } from "notistack";
+import { formatError } from "../../utilities/formatError";
 
 type EditProfileType = {
     show: () => void,
@@ -62,19 +63,10 @@ export function useProfileEditor() {
 
 const myAcceptedMediaTypes = acceptedImageTypes
 
-const EditProfileFormSchema = z.object({
-    name: z.string(),
-    handle: z.string(),
-    profileMedia: ServerMediaSchema.optional().nullable(),
-    bannerMedia: ServerMediaSchema.optional().nullable(),
-    bio: z.string()
-})
-
-type EditProfileForm = z.infer<typeof EditProfileFormSchema>
-
 function EditProfileDialog({ open, close }: { open: boolean, close: () => void }) {
     // Common
     const theme = useTheme()
+    const { enqueueSnackbar } = useSnackbar()
 
     // Get user
     const { userId } = useUser()
@@ -123,19 +115,27 @@ function EditProfileDialog({ open, close }: { open: boolean, close: () => void }
     // Submit
     const canSubmit = !isSubmitting && !profileMedia.uploading && !bannerMedia.uploading
     const onSubmit = useCallback(async (data: EditProfileForm) => {
-        if (!canSubmit) return
-        // Upload media before submit
-        const [banner, avatar] = await Promise.all([
-            bannerMedia.submit(),
-            profileMedia.submit()
-        ])
-        // Construct the full data that contains the media
-        const fullData = { ...data, banner, avatar }
-        console.log("Edit profile form", fullData)
-        // Submit to the api
-        const newUser = await updateUser(fullData)
-        // Apply changes to the global store
-        useMainStore.getState().addUsers([newUser])
+        try {
+            if (!canSubmit) return
+            // Upload media before submit
+            const [banner, avatar] = await Promise.all([
+                bannerMedia.submit(),
+                profileMedia.submit()
+            ])
+            // Construct the full data that contains the media
+            const fullData = { ...data, banner, avatar }
+            console.log("Edit profile form", fullData)
+            // Submit to the api
+            const newUser = await updateUser(fullData)
+            // Apply changes to the global store
+            useMainStore.getState().addUsers([newUser])
+            // Success
+            close()
+            enqueueSnackbar("Profile updated", { variant: "success" })
+        }
+        catch (e) {
+            enqueueSnackbar(formatError(e), { variant: "error" })
+        }
     }, [profileMedia, bannerMedia, canSubmit, useMainStore])
 
     return (

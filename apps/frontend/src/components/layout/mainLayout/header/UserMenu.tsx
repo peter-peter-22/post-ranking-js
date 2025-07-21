@@ -6,16 +6,27 @@ import Stack from "@mui/material/Stack";
 import { SxProps, useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useState } from 'react';
-import { useAuth } from "../../../../authentication";
+import { useNavigate } from 'react-router-dom';
+import { useShallow } from 'zustand/react/shallow';
+import { useAuthStrict } from "../../../../authentication";
+import { requireUser, useMainStore } from '../../../globalStore/mainStore';
+import { convertSingleServerMedia } from '../../../posts/convertPostMedia';
 import UserAvatar from "../../../users/UserAvatar";
 import { UserProvider } from '../../../users/UserContext';
 
 export default function UserMenu({ sx }: { sx: SxProps }) {
+    // Navigation
+    const navigate = useNavigate()
+
     // Theme
     const theme = useTheme()
 
     // User
-    const { user, logout } = useAuth()
+    const { user, logout } = useAuthStrict()
+    const globalUser = useMainStore(useShallow(requireUser(user.id, user => ({
+        handle: user.handle,
+        avatar: user.avatar
+    }))))
 
     // Floating menu
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -48,7 +59,7 @@ export default function UserMenu({ sx }: { sx: SxProps }) {
                     alignItems={"center"}
                     width={"100%"}
                 >
-                    <UserAvatar />
+                    <UserAvatar handle={globalUser.handle} file={globalUser.avatar !== null ? convertSingleServerMedia(globalUser.avatar) : undefined} />
                     <Stack sx={{ overflow: "hidden" }} alignItems={"start"}>
                         <Typography
                             variant="body2"
@@ -86,7 +97,14 @@ export default function UserMenu({ sx }: { sx: SxProps }) {
                     horizontal: "center"
                 }}
             >
-                <MenuItem onClick={logout}>Logout</MenuItem>
+                <MenuItem
+                    onClick={
+                        () => {
+                            logout()
+                            navigate("/")
+                        }
+                    }
+                >Logout</MenuItem>
             </Menu>
         </UserProvider>
     )

@@ -1,6 +1,6 @@
+import { MediaFile } from '@me/schemas/src/zod/media';
 import Avatar, { AvatarProps } from '@mui/material/Avatar';
 import { memo } from 'react';
-import { MediaFile } from '../../types/media';
 
 export type UserAvatarProps = Omit<AvatarProps, "src"> & { file?: MediaFile, handle: string }
 

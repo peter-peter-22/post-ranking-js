@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { generatePreview, MediaUpload } from "./useMultipleMediaUpload";
 import { createEvent } from "../../utilities/Event";
-import { ServerMedia } from "../../types/media";
+import { ServerMedia } from "@me/schemas/src/zod/media";
 
 export type UseSingleMediaUploadProps = {
     initialValue?: ServerMedia,

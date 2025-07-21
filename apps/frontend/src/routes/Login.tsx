@@ -1,34 +1,23 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LoginFormData, LoginSchema } from "@me/schemas/src/zod/createUser";
 import PublicIcon from '@mui/icons-material/Public';
 import StarIcon from '@mui/icons-material/Star';
 import Box from '@mui/material/Box';
 import Container from "@mui/material/Container";
+import InputAdornment from '@mui/material/InputAdornment';
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import { useSnackbar } from 'notistack';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Logo from '../assets/svg/Logo';
+import { useAuth } from '../authentication';
 import GradientButton from '../components/buttons/GradientButton';
 import FormTextField from '../components/inputs/FormTextField';
-import { getStandardGradient } from '../utilities/getStandardGradient';
-import { z } from 'zod';
-import { FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../authentication';
-import InputAdornment from '@mui/material/InputAdornment';
-import { useSnackbar } from 'notistack';
 import { formatError } from '../utilities/formatError';
-
-const LoginSchema = z.object({
-    userHandle: z
-        .string()
-        .regex(/^[a-z0-9_]+$/, {
-            message: "Only letters, numbers, and underscores are allowed"
-        })
-        .max(50)
-})
-
-type FormData = z.infer<typeof LoginSchema>
+import { getStandardGradient } from '../utilities/getStandardGradient';
 
 export default function Login() {
     // Authentication
@@ -45,11 +34,11 @@ export default function Login() {
     const redirectUrl = searchParams.get("redirectUrl") || "/home";
 
     // Form
-    const methods = useForm<FormData>({
+    const methods = useForm<LoginFormData>({
         resolver: zodResolver(LoginSchema),
     });
     const { handleSubmit, formState: { isSubmitting } } = methods;
-    const onSubmit = async (data: FormData) => {
+    const onSubmit = async (data: LoginFormData) => {
         console.log("Login form", data)
         try {
             await login(data.userHandle)
