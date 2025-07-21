@@ -24,11 +24,10 @@ export async function getNotificationCount(userId: string): Promise<number> {
 
     console.log("Notifications are not in redis, falling back to database");
     const keysFromDb = await getUnreadNotificationKeysFromDB(userId);
-    if (keysFromDb.length > 0) {
-        await redisClient.multi()
-            .sAdd(redisKey, [redisSetPlaceholder, ...keysFromDb.map(key => key.key)])
-            .expire(redisKey, notificationRedisTTL)
-    }
+    await redisClient.multi()
+        .sAdd(redisKey, [redisSetPlaceholder, ...keysFromDb.map(key => key.key)])
+        .expire(redisKey, notificationRedisTTL)
+        .exec()
 
     return keysFromDb.length;
 }
