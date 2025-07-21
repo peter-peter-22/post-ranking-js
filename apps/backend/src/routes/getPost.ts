@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { authRequest } from '../authentication';
 import { db } from '../db';
-import { posts } from '../db/schema/posts';
+import { posts } from '../db/schema/posts.js';
 import { candidateColumns } from '../posts/common';
 import { personalizePosts } from '../posts/hydratePosts';
 import { postProcessPosts } from '../posts/postProcessPosts';
@@ -11,7 +11,7 @@ import { DatabaseError } from 'pg';
 import { HttpError } from '../middlewares/errorHandler';
 import { GetPostResponse, GetPostSchema } from "@me/schemas/src/zod/getPost"
 
-const router = Router();
+const router:Router = Router();
 
 router.get('/:id', async (req: Request, res: Response) => {
     const { id } = GetPostSchema.parse(req.params)
