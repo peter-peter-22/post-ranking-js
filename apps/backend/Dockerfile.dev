@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1.4
+
+# Base image
+FROM node:20-alpine
+
+# Select app directory
+WORKDIR /app
+
+# Install pnpm
+RUN npm install pnpm -g
+
+# Install dependencies
+COPY package.json pnpm-lock.yaml ./
+
+# Install production deps
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Bundle app source
+COPY . .

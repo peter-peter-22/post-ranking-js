@@ -1,0 +1,1 @@
+ALTER TABLE "posts" ADD COLUMN "deleted" boolean DEFAULT false NOT NULL;

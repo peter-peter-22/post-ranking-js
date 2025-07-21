@@ -1,0 +1,2 @@
+ALTER TABLE "posts" drop column "timeBucket";--> statement-breakpoint
+ALTER TABLE "posts" ADD COLUMN "timeBucket" integer GENERATED ALWAYS AS (floor(extract(epoch from "posts"."createdAt")/60/60/12)::int) STORED NOT NULL;

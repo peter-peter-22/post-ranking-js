@@ -1,0 +1,9 @@
+### new
+GET http://localhost:3000/bots/userType/new
+
+### create a post with different kinds of comments
+GET http://localhost:3000/bots/userType/commentRanking
+
+### notification test
+GET http://localhost:3000/bots/userType/notificationTest
+Authorization: userhandle main_user

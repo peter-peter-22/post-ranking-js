@@ -1,0 +1,26 @@
+### Create a upload key for a profile avatar
+POST http://localhost:3000/userActions/signUserUpload/avatar HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "mimeType": "image/jpeg"
+}
+
+### Create a upload key for a profile banner
+POST http://localhost:3000/userActions/signUserUpload/banner HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "mimeType": "image/jpeg"
+}
+
+### Update a user
+POST http://localhost:3000/userActions/updateUser HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+   "name":"Main User 2"
+}

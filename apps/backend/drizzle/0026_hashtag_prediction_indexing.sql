@@ -1,0 +1,1 @@
+CREATE INDEX "trends_keyword_postCount_index" ON "trends" USING btree ("keyword","postCount" DESC NULLS LAST);

@@ -1,0 +1,11 @@
+### update the user clusters
+GET http://localhost:3000/update/userClusters
+
+### update the user cluster trends
+GET http://localhost:3000/update/clusterTrends
+
+### update the trends
+GET http://localhost:3000/update/trends
+
+### update engagement history
+GET http://localhost:3000/update/engagementHistory

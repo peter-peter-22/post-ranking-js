@@ -1,0 +1,2 @@
+ALTER TABLE "likes" ADD COLUMN "posterId" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "likes" ADD CONSTRAINT "likes_posterId_users_id_fk" FOREIGN KEY ("posterId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;

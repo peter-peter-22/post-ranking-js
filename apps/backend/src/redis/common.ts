@@ -1,0 +1,1 @@
+export const defaultDataFeedTTL=60*10

@@ -1,0 +1,96 @@
+### Create a pending post
+POST http://localhost:3000/userActions/create/pendingPost HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+### Create a upload key for an image
+POST http://localhost:3000/userActions/signPostUpload/image HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "pendingPostId": "548dc477-4066-4d42-af59-abd8f97942b8",
+    "id": 0,
+    "mimeType": "image/jpeg"
+}
+
+### Create a upload key for an video
+POST http://localhost:3000/userActions/signPostUpload/video HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "pendingPostId": "548dc477-4066-4d42-af59-abd8f97942b8",
+    "id": 1,
+    "mimeType": "video/mp4"
+}
+
+### Finalize the post
+POST http://localhost:3000/userActions/create/finalizePost HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "id": "548dc477-4066-4d42-af59-abd8f97942b8",
+    "text":"hello world",
+    "media":[
+        {
+            "bucketName":"public",
+            "objectName":"users/caedf76c-33e5-4c12-9434-785647c2ea7a/posts/548dc477-4066-4d42-af59-abd8f97942b8/images/0.webp",
+            "mimeType":"image/webp",
+            "description":"hello world"
+        },
+        {
+            "bucketName":"public",
+            "objectName":"users/caedf76c-33e5-4c12-9434-785647c2ea7a/posts/548dc477-4066-4d42-af59-abd8f97942b8/videos/1.mp4",
+            "mimeType":"video/mp4",
+            "description":"hello world"
+        }
+    ]
+}
+
+### Create a post without media
+POST http://localhost:3000/userActions/create/post HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "text":"Hello #1234 #hello @user1 @user2"
+}
+
+### Update a post
+POST http://localhost:3000/userActions/updatePost HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "id": "24dc47ef-e7f2-4454-9391-5223a76d239d",
+    "text":"hello world2"
+}
+
+### Delete a post
+POST http://localhost:3000/userActions/deletePost HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "id": "24dc47ef-e7f2-4454-9391-5223a76d239d",
+}
+
+### Get user mention text prediction
+POST http://localhost:3000/userActions/postCreatorTextPrediction/mention HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "text":"main"
+}
+
+### Get hashtag text prediction
+POST http://localhost:3000/userActions/postCreatorTextPrediction/hashtag HTTP/1.1
+content-type: application/json
+Authorization: userhandle main_user
+
+{
+    "text":"main"
+}

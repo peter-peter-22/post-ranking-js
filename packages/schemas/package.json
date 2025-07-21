@@ -1,0 +1,27 @@
+{
+  "name": "@me/schemas",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.2.2"
+  },
+  "exports": {
+    "./*": "./dist/*.js",
+    "./zod/*": "./dist/zod/*.js"
+  },
+  "scripts": {
+    "build": "tsc --build"
+  }
+}

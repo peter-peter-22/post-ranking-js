@@ -1,0 +1,20 @@
+### focus post
+GET http://localhost:3000/users/main_user/status/main-post
+
+### register or login
+POST http://localhost:3000/authenticate HTTP/1.1
+content-type: application/json
+
+{
+    "handle": "new_user"
+}
+
+### one post
+POST  http://localhost:3000/getPost/48540ad2-a0fe-4655-9cdc-efc6993aa161 HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### one user
+POST  http://localhost:3000/getUser/48540ad2-a0fe-4655-9cdc-efc6993aa161 HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json

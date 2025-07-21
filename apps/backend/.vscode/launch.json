@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": [
+                "nodemon --exec tsx src/index.ts"
+            ],
+            "console": "integratedTerminal",
+            "restart": true,
+        },
+        {
+            "name": "Attach to docker",
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}/backend",
+            "port": 9229,
+            "remoteRoot": "/app",
+            "request": "attach",
+            "type": "node",
+            "restart": true
+        },
+    ]
+}

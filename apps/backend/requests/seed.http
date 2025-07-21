@@ -1,0 +1,5 @@
+### basics
+GET http://localhost:3000/bots/scenes/basics
+
+### engagements 
+GET http://localhost:3000/bots/scenes/engagements

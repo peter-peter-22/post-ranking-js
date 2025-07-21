@@ -1,0 +1,1 @@
+CREATE INDEX if not exists "users_handle_followerCount_index" ON "users" USING btree ("handle","followerCount" DESC NULLS LAST);

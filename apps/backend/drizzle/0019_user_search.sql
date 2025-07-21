@@ -1,0 +1,3 @@
+ALTER TABLE "users" ADD COLUMN if not exists "fullName" varchar(101) GENERATED ALWAYS AS ("users"."name" || ' ' || "users"."handle") STORED;--> statement-breakpoint
+CREATE INDEX if not exists "user_name_search_index" ON "users" USING gin ("fullName" gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX if not exists "users_followerCount_id_index" ON "users" USING btree ("followerCount" DESC NULLS LAST,"id" DESC NULLS LAST);

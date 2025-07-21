@@ -1,0 +1,5 @@
+### reset db
+GET http://localhost:3000/reset/all
+
+### reset vector db schema
+GET http://localhost:3000/reset/vectorsSchema

@@ -1,0 +1,1 @@
+CREATE INDEX "users_handle_index" ON "users" USING btree ("handle");

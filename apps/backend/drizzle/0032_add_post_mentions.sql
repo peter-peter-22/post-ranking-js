@@ -1,0 +1,1 @@
+ALTER TABLE "posts" ADD COLUMN "mentions" varchar(50)[];

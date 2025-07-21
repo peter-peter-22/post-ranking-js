@@ -1,0 +1,2 @@
+ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "timeBucket" integer GENERATED ALWAYS AS (round(extract(epoch from "posts"."createdAt")/60/60/12)::int) STORED NOT NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "recentPostsESimIndex" ON "posts" USING hnsw ("timeBucket","embedding" vector_l2_ops);

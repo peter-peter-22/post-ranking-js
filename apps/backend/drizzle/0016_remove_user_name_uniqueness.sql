@@ -1,0 +1,1 @@
+DROP INDEX if exists users_name_unique CASCADE;

@@ -1,0 +1,123 @@
+### feed
+POST http://localhost:3000/userActions/feed HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### followed feed
+POST http://localhost:3000/userActions/feed/followed HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### one post
+POST  http://localhost:3000/userActions/getPost/48540ad2-a0fe-4655-9cdc-efc6993aa161 HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### relevant posts
+POST http://localhost:3000/userActions/relevantPosts/a9e9f884-45b6-47ec-b7bb-38bfc4d3a908 HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### comment section
+POST http://localhost:3000/userActions/commentSection/edd2df9b-7680-4ffa-b909-19f8819ae2d4 HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### follow
+POST http://localhost:3000/userActions/follow/create HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+{
+    "followedId":"edd2df9b-7680-4ffa-b909-19f8819ae2d4"
+}
+
+### unfollow
+POST http://localhost:3000/userActions/follow/remove HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+{
+    "followedId":"edd2df9b-7680-4ffa-b909-19f8819ae2d4"
+}
+
+### who to follow
+GET http://localhost:3000/userActions/whoToFollow HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### who to follow feed
+POST http://localhost:3000/userActions/whoToFollow/feed HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### posts of user
+POST http://localhost:3000/userActions/userContents/main_user/posts HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### posts of user
+POST http://localhost:3000/userActions/userContents/main_user/posts HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### search latest posts
+POST http://localhost:3000/userActions/searchPosts/latest?text=car HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### search top posts
+POST http://localhost:3000/userActions/searchPosts/top?text=car HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### search latest posts from a user
+POST http://localhost:3000/userActions/searchPosts/latest?text=car&userHandle=main_user HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### search for a username
+POST http://localhost:3000/userActions/searchUsers?text=main HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### list followers of user
+POST http://localhost:3000/userActions/listFollows/followers/Kurt.Kling HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### list followed of user
+POST http://localhost:3000/userActions/listFollows/followed/main_user HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### like a post
+POST http://localhost:3000/userActions/like HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+{
+    "postId":"8d70970b-70d8-475a-8f2c-4f5a57d01ff6",
+    "value":true
+}
+
+### regular update
+POST http://localhost:3000/userActions/regularUpdates HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+{
+    "viewedPosts":["8d70970b-70d8-475a-8f2c-4f5a57d01ff6"],
+    "clickedPosts":["8d70970b-70d8-475a-8f2c-4f5a57d01ff6"],
+    "visiblePosts":["8d70970b-70d8-475a-8f2c-4f5a57d01ff6"]
+}
+
+### notifications
+POST http://localhost:3000/userActions/notifications HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json
+
+### mention notifications
+POST http://localhost:3000/userActions/notifications/mentions HTTP/1.1
+Authorization: userhandle main_user
+content-type: application/json

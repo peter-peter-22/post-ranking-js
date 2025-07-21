@@ -1,0 +1,18 @@
+
+# Base image
+FROM node:20-alpine
+
+# Select app directory
+WORKDIR /app
+
+# Install pnpm
+RUN npm install pnpm -g
+
+# Install dependencies
+COPY package.json pnpm-lock.yaml ./
+
+# Install production deps
+RUN pnpm install --prod
+
+# Bundle app source
+COPY . .

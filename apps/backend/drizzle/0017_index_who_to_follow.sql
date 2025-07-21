@@ -1,0 +1,1 @@
+CREATE INDEX "engagement_history_viewerId_likes_index" ON "engagement_history" USING btree ("viewerId","likes" DESC NULLS LAST);
