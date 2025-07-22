@@ -10,7 +10,8 @@ export async function likePost(postId: string, userId: string, value: boolean) {
     // Handle changes in the DB
     if (value) {
         const [created] = await createLike(postId, userId);
-        if (created)
+        // Create notification if the used didn't liked his own post
+        if (created && created.posterId !== userId) 
             await createLikeNotification(created.posterId, created.postId,created.createdAt)
     }
     else await deleteLike(postId, userId);

@@ -82,8 +82,8 @@ async function handleUpdates(post: Post) {
     if (post.replyingTo && post.repliedUser) {
         await Promise.all([
             incrementReplyCounter(post.replyingTo, post.userId, 1),
-            createReplyNotification(post.repliedUser, post.replyingTo,post.createdAt),
-            createMentionNotifications(post.mentions, post.id,post.createdAt),
+            createReplyNotification(post.repliedUser, post.replyingTo, post.createdAt, post.id),
+            createMentionNotifications(post.mentions, post.id, post.createdAt, post.userId),
         ])
     }
 }
