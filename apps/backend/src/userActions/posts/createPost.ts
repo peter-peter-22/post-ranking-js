@@ -4,24 +4,12 @@ import { addMedia } from "../../db/controllers/pendingUploads/updateMedia";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { chunkedInsert } from "../../db/utils/chunkedInsert";
 import { PostToFinalize } from "../../routes/userActions/posts/createPost";
-import { prepareAnyPost, preparePosts, prepareReplies } from "./preparePost";
-
-/** Calculate the metadata of posts and insert them into the database. */
-export async function createPosts(data: PostToInsert[]) {
-    console.log(`Creating ${data.length} posts...`)
-    const postsToInsert = await preparePosts(data)
-    return await insertPosts(postsToInsert)
-}
-
-/** Insert replies into the database. */
-export async function createReplies(data: PostToInsert[]) {
-    console.log(`Creating ${data.length} replies...`)
-    const postsToInsert = await prepareReplies(data)
-    return await insertPosts(postsToInsert)
-}
+import { prepareAnyPost } from "./preparePost";
+import { incrementReplyCounter } from "../../jobs/replyCount";
+import { createMentionNotifications, createReplyNotification } from "../../db/controllers/notifications/createNotification";
 
 /** Insert posts to the database. */
-export async function insertPosts(postsToInsert: PostToInsert[]) {
+export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {
     // Insert to db and return
     console.log(`Inserting posts`)
     const inserted: Post[] = []
@@ -42,6 +30,16 @@ export async function insertPosts(postsToInsert: PostToInsert[]) {
     return inserted
 }
 
+export async function insertPost(post: PostToInsert) {
+    post = await prepareAnyPost(post)
+    const [created] = await db
+        .insert(posts)
+        .values(post)
+        .returning()
+    handlePostInsert(created).catch(e => { console.error("Error after creating post", e) })
+    return created
+}
+
 /** Validate and finalize a post and it's media files. */
 export async function finalizePost(post: PostToFinalize) {
     console.log("Finalizing post..")
@@ -52,9 +50,22 @@ export async function finalizePost(post: PostToFinalize) {
     // Exclude the id from the update to avoid error
     const { id, ...valuesToUpdate } = postToInsert
     // Update the pending post to set it's values and remove the pending status
-    return await db
+    const [created] = await db
         .update(posts)
         .set({ ...valuesToUpdate, pending: false })
         .where(eq(posts.id, post.id))
         .returning()
+    handlePostInsert(created).catch(e => { console.error("Error after creating post", e) })
+    return created
+}
+
+/** Handle notifications and other updates of a created post */
+async function handlePostInsert(post: Post) {
+    if (post.replyingTo && post.repliedUser) {
+        await Promise.all([
+            incrementReplyCounter(post.replyingTo, post.userId, 1),
+            createReplyNotification(post.repliedUser, post.replyingTo, post.createdAt, post.id),
+            createMentionNotifications(post.mentions, post.id, post.createdAt, post.userId),
+        ])
+    }
 }

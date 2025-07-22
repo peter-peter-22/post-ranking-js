@@ -1,4 +1,5 @@
-import { inArray } from "drizzle-orm";
+import { hashtagRegex, mentionRegex, urlRegex } from "@me/schemas/src/regex";
+import { eq } from "drizzle-orm";
 import emojiRegex from "emoji-regex";
 import { db } from "../../db";
 import { generateEmbeddingVectors } from "../../db/controllers/embedding";
@@ -6,12 +7,12 @@ import { posts, PostToInsert } from "../../db/schema/posts";
 import { HttpError } from "../../middlewares/errorHandler";
 import { normalizeVector } from "../../utilities/arrays/normalize";
 
-/** Calculate the metadata of posts before insert. */
+/** Bulk prepare posts before insert. */
 export async function preparePosts(data: PostToInsert[]) {
     console.log(`Preparing ${data.length} posts...`)
 
     // Set text related data
-    processPostText(data)
+    data.forEach(post => { processPostText(post) })
 
     // Generate embedding vectors for texts
     const { embeddings, keywords } = await generateEmbeddingVectors(data.map(post => post.embeddingText || ""))
@@ -28,50 +29,54 @@ export async function preparePosts(data: PostToInsert[]) {
     return postsToInsert
 }
 
-function processPostText(data: PostToInsert[]) {
-    data.forEach(post => {
-        if (!post.text) return
-        const textHashtags = getEmbeddingTextAndHashtasgs(post)
-        post.hashtags = textHashtags.hashtags
-        post.embeddingText = textHashtags.embeddingText
-        post.mentions = getMentions(textHashtags.embeddingText)
-    })
+/** Calculate the metadata of a post before insert. */
+export async function preparePost(post: PostToInsert) {
+    // Set text related data
+    processPostText(post)
+
+    // Generate embedding vectors and keywords
+    if (!post.embeddingText) throw new HttpError(422, "The post has no text and media description")
+    const { embeddings, keywords } = await generateEmbeddingVectors([post.embeddingText])
+    post.embedding = embeddings[0]
+    post.keywords = [...new Set([...keywords[0], ...post.hashtags || []])]
+    post.embeddingNormalized = post.embeddingText ? normalizeVector(post.embedding) : null
+
+    return post
 }
 
-/** Calculate the metadata of replies before insert. */
-export async function prepareReplies(data: PostToInsert[]) {
-    console.log(`Preparing ${data.length} replies...`)
-    processPostText(data)
-    await addRepliedUser(data)
-    return data
+function processPostText(post: PostToInsert) {
+    if (!post.text) return
+    const textHashtags = getEmbeddingTextAndHashtasgs(post)
+    post.hashtags = textHashtags.hashtags
+    post.embeddingText = textHashtags.embeddingText
+    post.mentions = getMentions(textHashtags.embeddingText)
 }
 
-async function addRepliedUser(data: PostToInsert[]) {
-    const repliedPosts = await db
+/** Calculate the metadata of a reply before insert. */
+export async function prepareReply(post: PostToInsert) {
+    processPostText(post)
+    await addRepliedUser(post)
+    return post
+}
+
+async function addRepliedUser(post: PostToInsert) {
+    if (!post.replyingTo) throw new HttpError(422, "Invalid reply.")
+    const [repliedPost] = await db
         .select({ userId: posts.userId, id: posts.id })
         .from(posts)
-        .where(inArray(posts.id, data.map(p => {
-            if (!p.replyingTo) throw new HttpError(400, "Invalid reply")
-            return p.replyingTo
-        })))
-    data.forEach(reply => {
-        const myPost = repliedPosts.find(p => p.id === reply.replyingTo)
-        reply.repliedUser = myPost?.userId
-    })
+        .where(eq(posts.id, post.replyingTo))
+    if (!repliedPost) throw new HttpError(404, "The replied post does not exists.")
+    post.repliedUser = repliedPost.userId
 }
 
 /** Calculate the medadata of a post or a reply before insert. */
 export async function prepareAnyPost(data: PostToInsert) {
-    const [postToInsert] = data.replyingTo ?
-        await prepareReplies([data])
+    const postToInsert = data.replyingTo ?
+        await prepareReply(data)
         :
-        await preparePosts([data])
+        await preparePost(data)
     return postToInsert
 }
-
-export const hashtagRegex = /#[^#\s]+/gm
-export const mentionRegex = /@[^@\s]+/gm
-export const urlRegex = /(https|http):\/\/\S+/gm
 
 /** Remove hashtags from the text, add them to the hashtag list */
 function getEmbeddingTextAndHashtasgs(post: PostToInsert) {
