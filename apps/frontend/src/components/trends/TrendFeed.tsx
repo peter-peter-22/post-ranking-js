@@ -1,6 +1,6 @@
 import { InfiniteData, QueryKey, useInfiniteQuery } from "@tanstack/react-query";
 import { ReactNode, useMemo } from "react";
-import { Trend } from "../../types/trend";
+import { Trend } from '../../../../types/trend';
 import InfiniteListLoading from "../infiniteLists/InfiniteListLoading";
 import { HasSavedScrollPosition, PersistentScrollProvider } from "../infiniteLists/PersistentScroll";
 import { TrendList, TrendListPersistentScroll } from "./TrendList";

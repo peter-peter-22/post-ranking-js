@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { TrendSchema } from "../../../../types/trend";
 import { apiClient } from "../../../api";
+import { TrendSchema } from "@me/schemas/src/zod/trends";
 
 const HashtagPredictionResponse = z.object({
     hashtags: TrendSchema.array()

@@ -2,7 +2,7 @@ import { db } from "..";
 import { promisesAllTracked } from "../../utilities/arrays/trackedPromises";
 import { updateAllFollowCounts } from "../controllers/users/follow/count";
 import { follows, FollowToInsert } from "../schema/follows";
-import { User } from "../schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { chunkedInsert } from "../utils/chunkedInsert";
 import { updateFollowSnapshots } from "./groups/memory caching/updateSnapshots";
 
@@ -18,7 +18,7 @@ const chanceToFollowIrrelevant = 0.02
  * @param posts all possibble followeds
  * @returns array of follows
  */
-async function createRandomFollows(from: User[], to: User[]) {
+async function createRandomFollows(from: ClientUser[], to: ClientUser[]) {
     console.log(`Creating follows. Max results: ${from.length * to.length}`)
     /** The total count of the inserted rows. */
     let count = 0
@@ -55,7 +55,7 @@ async function createRandomFollows(from: User[], to: User[]) {
  * @param followables all followable users
  * @returns array of follows
  */
-function createRandomFollowsForUser(user: User, followables: User[]): FollowToInsert[] {
+function createRandomFollowsForUser(user: ClientUser, followables: ClientUser[]): FollowToInsert[] {
     const follows: FollowToInsert[] = [];
     followables.forEach(followable => {
         /** true if the followable user has at least one topic the follower is interested about */
@@ -70,7 +70,7 @@ function createRandomFollowsForUser(user: User, followables: User[]): FollowToIn
     return follows
 }
 
-export async function seedFollows({ from, to }: { from: User[], to: User[] }) {
+export async function seedFollows({ from, to }: { from: ClientUser[], to: ClientUser[] }) {
     await createRandomFollows(from, to)
     await updateAllFollowCounts()
 }

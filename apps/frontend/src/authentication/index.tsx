@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { clearUserHandle, getUserHandle, setUserHandle } from "../api/api";
 import { authenticate, CommonData } from "../api/authentication/authenticate";
-import { User } from "../types/user";
 import { useSnackbar } from "notistack";
 import { formatError } from "../utilities/formatError";
+import { User } from "@me/schemas/src/zod/user";
 
 type AuthContextType = {
     user: User | undefined,

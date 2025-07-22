@@ -15,7 +15,7 @@ import { Post, posts } from "../../schema/posts";
 import { postSnapshots } from "../../schema/postSnapshots";
 import { trends } from "../../schema/trends";
 import { userEmbeddingSnapshots } from "../../schema/userEmbeddingSnapshots";
-import { User } from "../../schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { views } from "../../schema/views";
 import { getAllBots } from "../utils";
 import { getEngagementHistoryCache } from "./memory caching/engagementHistory";
@@ -28,7 +28,7 @@ import { userEmbeddingVectorHandler } from "./memory caching/userEmbeddingVector
 import { isPost } from "../../../posts/filters";
 
 type UserPostPair = [
-  user: User,
+  user: ClientUser,
   post: Post,
   timestamp: number
 ]
@@ -141,7 +141,7 @@ async function createEngagementsForPairs(pairs: UserPostPair[]) {
  * @param viewer The viewer.
  * @param checkFollow The function to check if a user follows another user.
  */
-function repliedByFollowed(post: Post, viewer: User, checkFollow: (from: string, to: string) => boolean, commenterChecker: (postId: string) => Set<string> | undefined): boolean {
+function repliedByFollowed(post: Post, viewer: ClientUser, checkFollow: (from: string, to: string) => boolean, commenterChecker: (postId: string) => Set<string> | undefined): boolean {
   // Get the comments of the post.
   const repliers = commenterChecker(post.id)
   if (!repliers) return false // No replies, return false.

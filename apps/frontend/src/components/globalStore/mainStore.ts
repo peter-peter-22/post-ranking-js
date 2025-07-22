@@ -1,9 +1,9 @@
+import { PersonalPost } from '@me/schemas/src/zod/post';
+import { User } from '@me/schemas/src/zod/user';
 import { create, ExtractState } from 'zustand';
 import { combine } from 'zustand/middleware';
-import { Post } from '../../types/post';
-import { User } from '../../types/user';
 
-export type PostOnly = Omit<Post, "user">
+export type PostOnly = Omit<PersonalPost, "user">
 
 export const useMainStore = create(combine(
     {
@@ -23,7 +23,7 @@ export const useMainStore = create(combine(
                 return { users: newUsers }
             })
         },
-        addPosts: (postsToAdd: Post[]) => {
+        addPosts: (postsToAdd: PersonalPost[]) => {
             set(({ posts, users, usersByHandle }) => {
                 const newPosts = new Map(posts)
                 const newUsers = new Map(users)
@@ -45,7 +45,7 @@ export const useMainStore = create(combine(
                 };
             });
         },
-        updatePost: (id: string, updateFn:(post: PostOnly)=>PostOnly) => {
+        updatePost: (id: string, updateFn: (post: PostOnly) => PostOnly) => {
             set((state) => {
                 const post = state.posts.get(id);
                 if (!post) throw new Error(`No post with id ${id}`)
@@ -76,7 +76,7 @@ export function requirePost<T>(id: string, selectFn: (user: PostOnly) => T) {
 }
 
 /** Add the posts to the global storage and return their ids */
-export function processPosts(posts: Post[]) {
+export function processPosts(posts: PersonalPost[]) {
     useMainStore.getState().addPosts(posts)
     return posts.map(post => post.id)
 }

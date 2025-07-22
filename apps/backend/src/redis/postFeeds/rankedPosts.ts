@@ -1,7 +1,7 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { posts } from "../../db/schema/posts";
-import { User } from "../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { HttpError } from "../../middlewares/errorHandler";
 import { redisClient } from "../connect";
 import { candidateColumns } from "../../posts/common";
@@ -29,7 +29,7 @@ export async function getPaginatedRankedPosts<TPageParams>({
 }: {
     getMore: (pageParams?: TPageParams) => Promise<{ posts: PersonalPost[], pageParams: TPageParams } | undefined>,
     feedName: string,
-    user: User,
+    user: ClientUser,
     offset: number,
     minRemaining?: number,
     ttl?: number
@@ -154,7 +154,7 @@ function postsToZSet(posts: PersonalPost[]) {
 }
 
 /** Fetch the posts of the provided ids. */
-async function postsFromIds(ids: ZSetEntry[], user: User) {
+async function postsFromIds(ids: ZSetEntry[], user: ClientUser) {
     // Exit of no ids provided
     if (ids.length === 0) return []
 

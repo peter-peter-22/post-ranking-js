@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { UserSchema } from "../../types/user";
 import { apiClient } from "../api";
 import { queryClient } from "../../components/contexts/TanstackProvider";
 import { processUsers } from "../../components/globalStore/mainStore";
+import { UserSchema } from "@me/schemas/src/zod/user";
 
 const UserResponseSchema = z.object({
     users: UserSchema.array()

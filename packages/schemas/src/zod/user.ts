@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { ServerMediaSchema } from "./media"
 
-export const UserSchema=z.object({
+export const ClientUserSchema=z.object({
     id:z.string(),
     name:z.string(),
     handle:z.string(),
@@ -14,4 +14,4 @@ export const UserSchema=z.object({
     followed:z.boolean().optional(),
 })
 
-export type User=z.infer<typeof UserSchema>
+export type ClientUser=z.infer<typeof ClientUserSchema>

@@ -4,7 +4,7 @@ import { getCachedUser } from "../../api/users/cache";
 import { MainLayoutInner } from "../../components/layout/mainLayout/MainLayout";
 import Footer from "../../components/layout/mainLayout/footer/Footer";
 import { UserProvider } from "../../components/users/UserContext";
-import { User } from "../../types/user";
+import { User } from "@me/schemas/src/zod/user";
 import FocusedUserProfile from "./FocusedUserProfile";
 import WhoToFollow from "../../components/layout/mainLayout/footer/modules/WhoToFollow";
 

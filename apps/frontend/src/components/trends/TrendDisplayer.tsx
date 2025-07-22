@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import { Link } from 'react-router-dom';
-import { Trend } from '../../types/trend';
+import { Trend } from '../../../../types/trend';
 import { getTrendUrl } from '../../urls/trends';
 import { formatNumber } from '../../utilities/formatNumber';
 

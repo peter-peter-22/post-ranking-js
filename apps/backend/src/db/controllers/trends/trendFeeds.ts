@@ -1,11 +1,11 @@
 import { and, desc, eq, lt, lte } from "drizzle-orm";
 import { db } from "../..";
+import { HttpError } from "../../../middlewares/errorHandler";
+import { trendsPerPage } from "../../../redis/trendFeeds/common";
 import { trends } from "../../schema/trends";
 import { userClusterTrends } from "../../schema/userClusterTrends";
 import { User } from "../../schema/users";
 import { getClusterTrendColumns, getTrendColumns } from "./getTrends";
-import { HttpError } from "../../../middlewares/errorHandler";
-import { trendsPerPage } from "../../../redis/trendFeeds/common";
 
 export type TrendPostScorePageParams = { maxScore: number, lastKeyword: string }
 

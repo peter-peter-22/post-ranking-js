@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { posts } from "../../db/schema/posts";
-import { User } from "../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { HttpError } from "../../middlewares/errorHandler";
 import { DatePageParams, deduplicatePosts, mergePostArrays } from "../common";
 import { ESimPageParams } from "../forYou/candidates/embedding";
@@ -16,7 +16,7 @@ export type RelevantPostsPageParams = {
 }
 
 /** Get posts from the main feed of a user. */
-export async function getRelevantPosts({ user, pageParams, offset, postId }: { user: User, pageParams?: RelevantPostsPageParams, offset: number, postId: string }) {
+export async function getRelevantPosts({ user, pageParams, offset, postId }: { user: ClientUser, pageParams?: RelevantPostsPageParams, offset: number, postId: string }) {
     // Select the main post
     const [post] = await db.select().from(posts).where(eq(posts.id, postId))
     if (!post)

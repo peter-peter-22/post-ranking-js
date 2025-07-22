@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { Virtualizer } from "@tanstack/react-virtual";
 import { forwardRef, memo, useEffect } from "react";
-import { Trend } from "../../types/trend";
+import { Trend } from '../../../../types/trend';
 import TrendDisplayer, { TrendDisplayerProps } from "./TrendDisplayer";
 
 export type TrendListDisplayerProps = {

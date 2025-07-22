@@ -1,5 +1,5 @@
 import { getTrendNames } from "../../db/controllers/trends/getTrends";
-import { User } from "../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { DatePageParams, deduplicatePosts, mergePostArrays } from "../common";
 import { rankPosts } from "../ranker";
 import { ESimPageParams, getEmbeddingSimilarityCandidates } from "./candidates/embedding";
@@ -15,7 +15,7 @@ export type ForYouPageParams = {
 }
 
 /** Get posts from the main feed of a user */
-export async function getMainFeed({ user, pageParams, offset }: { user: User, pageParams?: ForYouPageParams, offset: number }) {
+export async function getMainFeed({ user, pageParams, offset }: { user: ClientUser, pageParams?: ForYouPageParams, offset: number }) {
     // Get common data
     const firstPage = !offset
     const [trends] = await Promise.all([

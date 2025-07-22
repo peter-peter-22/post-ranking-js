@@ -1,4 +1,4 @@
-import { User } from "../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { DatePageParams } from "../common";
 import { getFollowedCandidates } from "../forYou/candidates/followed";
 import { rankPosts } from "../ranker";
@@ -8,7 +8,7 @@ export type FollowedPostsPageParams = {
 }
 
 /** Get posts from the main feed of a user */
-export async function getFollowedFeed({ user, pageParams, offset }: { user: User, pageParams?: FollowedPostsPageParams, offset: number }) {
+export async function getFollowedFeed({ user, pageParams, offset }: { user: ClientUser, pageParams?: FollowedPostsPageParams, offset: number }) {
     // Get common data
     const firstPage = !offset
 

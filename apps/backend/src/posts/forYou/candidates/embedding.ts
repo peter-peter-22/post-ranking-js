@@ -2,7 +2,7 @@ import { and, asc, gt, inArray, l2Distance } from "drizzle-orm";
 import { db } from "../../../db";
 import { getTimeBuckets } from "../../../db/controllers/posts/timeBuckets";
 import { posts } from "../../../db/schema/posts";
-import { User } from "../../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { candidateColumns } from "../../common";
 import { maxAge, minimalEngagement } from "../../filters";
 import { personalizePosts } from "../../hydratePosts";
@@ -23,7 +23,7 @@ export async function getEmbeddingSimilarityCandidates({
     firstPage: boolean,
     pageParams?: ESimPageParams,
     count: number,
-    user: User
+    user: ClientUser
 }) {
     if (!firstPage && !pageParams || !user.embeddingNormalized) return
 

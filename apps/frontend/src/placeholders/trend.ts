@@ -1,4 +1,4 @@
-import { Trend } from "../types/trend";
+import { Trend } from '../../../../types/trend';
 
 export const exampleTrend: Trend = {
     name: "name",

@@ -3,7 +3,6 @@ import { ContentBlock, ContentState, DraftDecorator, DraftDecoratorComponentProp
 import { forwardRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { getHashtagAutocomplete } from '../../../../api/posts/creator/hashtags/hashtagsAutocomplete';
-import { Trend } from '../../../../types/trend';
 import { getTrendUrl } from '../../../../urls/trends';
 import { hashtagRegex } from '../../../../utilities/regex';
 import RichTextAutocompleteContainer from '../autocomplete/AutoCompleteContainer';
@@ -12,6 +11,7 @@ import { useAutoCompleteController } from '../autocomplete/useAutoCompleteContro
 import { findWithRegex, suggestionDebounce } from '../common';
 import { useEditorState } from '../EditorStateContext';
 import { replaceDecoratorText } from '../replaceText';
+import { Trend } from '@me/schemas/src/zod/trends';
 
 function hashtagStrategy(
     block: ContentBlock,

@@ -6,9 +6,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Paper, { PaperProps } from '@mui/material/Paper';
 import { forwardRef } from 'react';
-import { Trend } from '../../../../types/trend';
 import { formatNumber } from '../../../../utilities/formatNumber';
 import { RichTextAutoCompleteSelectorProps, useAutocompleteSelector } from './useAutoComplete';
+import { Trend } from '@me/schemas/src/zod/trends';
 
 type HashtagAutoCompleteSelectorProps = Omit<PaperProps, "onSubmit"> & {
     autoCompleteOptions: RichTextAutoCompleteSelectorProps<Trend>,

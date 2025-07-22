@@ -1,7 +1,7 @@
 import { useWindowVirtualizer, VirtualizerOptions } from "@tanstack/react-virtual";
 import { useRef } from "react";
 import { usePersistentScrollVirtualizer } from "../infiniteLists/PersistentScroll";
-import { Trend } from "../../types/trend";
+import { Trend } from '../../../../types/trend';
 import TrendListDisplayer from "./TrendListDisplayer";
 
 export type TrendListProps = {

@@ -1,6 +1,6 @@
 import { InfiniteData, QueryKey, useInfiniteQuery } from "@tanstack/react-query";
 import { ReactNode, useMemo } from "react";
-import { User } from "../../types/user";
+import { User } from "@me/schemas/src/zod/user";
 import { processUsers } from "../globalStore/mainStore";
 import InfiniteListLoading from "../infiniteLists/InfiniteListLoading";
 import { HasSavedScrollPosition, PersistentScrollProvider } from "../infiniteLists/PersistentScroll";

@@ -1,4 +1,4 @@
-import { User } from "../types/user";
+import { User } from "@me/schemas/src/zod/user";
 import { exampleImage, exampleImageFlat } from "./files";
 
 export const exampleUser:User = {

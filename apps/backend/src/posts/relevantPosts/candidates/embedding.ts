@@ -3,7 +3,7 @@ import { db } from "../../../db";
 import { Vector } from "../../../db/controllers/embedding/updateUserEmbedding";
 import { getTimeBuckets } from "../../../db/controllers/posts/timeBuckets";
 import { posts } from "../../../db/schema/posts";
-import { User } from "../../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { candidateColumns } from "../../common";
 import { maxAge, minimalEngagement } from "../../filters";
 import { ESimPageParams } from "../../forYou/candidates/embedding";
@@ -23,7 +23,7 @@ export async function getPostEmbeddingSimilarityCandidates({
     firstPage: boolean,
     pageParams?: ESimPageParams,
     count: number,
-    user: User,
+    user: ClientUser,
     vectorNormalized: Vector | null,
     maxDistance: number
 }) {

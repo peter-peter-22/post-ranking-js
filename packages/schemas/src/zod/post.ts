@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserSchema } from "./user";
+import { ClientUserSchema } from "./user";
 import { ServerMediaSchema } from "./media";
 
 export const UserEngagementHistorySchema = z.object({
@@ -23,7 +23,7 @@ export const PersonalPostSchema = z.object({
     engagementHistory: UserEngagementHistorySchema.nullable(),
     repliedByFollowed: z.boolean(),
     liked: z.boolean(),
-    user: UserSchema,
+    user: ClientUserSchema,
     media: z.array(ServerMediaSchema).nullable(),
     keywords: z.array(z.string()).nullable(),
     embeddingText: z.string().nullable(),

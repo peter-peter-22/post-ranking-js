@@ -1,6 +1,6 @@
 import z from "zod"
 import { ServerMediaSchema } from "./media"
-import { UserSchema } from "./user"
+import { ClientUserSchema } from "./user"
 import { TrendSchema } from "./trends"
 
 const UserHandleSchema = z
@@ -29,18 +29,18 @@ export const EditProfileFormSchema = z.object({
 export type EditProfileForm = z.infer<typeof EditProfileFormSchema>
 
 export const UpdateUserResponseSchema = z.object({
-    user: UserSchema
+    user: ClientUserSchema
 })
 export type UpdateUserResponse=z.infer<typeof UpdateUserResponseSchema>
 
 export const AuthCommonDataResponse = z.object({
-    whoToFollow: z.array(UserSchema),
+    whoToFollow: z.array(ClientUserSchema),
     trends: z.array(TrendSchema)
 })
 export type CommonDataResponse = z.infer<typeof AuthCommonDataResponse>
 
 export const AuthResponseSchema = z.object({
-    user: UserSchema,
+    user: ClientUserSchema,
     common: AuthCommonDataResponse
 })
 export type AuthResponse=z.infer<typeof AuthResponseSchema>

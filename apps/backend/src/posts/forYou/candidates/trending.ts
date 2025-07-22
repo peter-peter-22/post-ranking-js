@@ -1,7 +1,7 @@
 import { and, arrayOverlaps, desc, gt, lt, or } from "drizzle-orm";
 import { db } from "../../../db";
 import { posts } from "../../../db/schema/posts";
-import { User } from "../../../db/schema/users";
+import { ClientUser } from "@me/schemas/src/zod/user";
 import { candidateColumns, DatePageParams } from "../../common";
 import { isPost, minimalEngagement, noPending, recencyFilter } from "../../filters";
 import { personalizePosts, PersonalPost, postsToHydrateQuery } from "../../hydratePosts";
@@ -17,7 +17,7 @@ export async function getTrendCandidates({
     firstPage
 }: {
     trends: string[],
-    user: User,
+    user: ClientUser,
     count: number,
     pageParams?: DatePageParams,
     firstPage: boolean

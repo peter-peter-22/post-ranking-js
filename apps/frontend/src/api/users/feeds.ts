@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { UserSchema } from "../../types/user";
 import { apiClient } from "../api";
+import { UserSchema } from "@me/schemas/src/zod/user";
 
 const UserListResponseSchema = z.object({
     users: UserSchema.array(),
