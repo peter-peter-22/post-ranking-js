@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { authRequestStrict } from '../../../authentication';
 import { BasicFeedSchema } from '../../../posts/common';
 import { ForYouPageParams, getMainFeed } from '../../../posts/forYou';
-import { getPaginatedRankedPosts } from '../../../redis/postFeeds/rankedPosts';
+import { getPaginatedRankedPosts } from '../../../redis/feeds/postFeeds/rankedPosts';
 import { postProcessPosts } from '../../../posts/postProcessPosts';
 import { FollowedPostsPageParams, getFollowedFeed } from '../../../posts/followed';
 

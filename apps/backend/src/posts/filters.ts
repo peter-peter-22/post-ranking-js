@@ -15,15 +15,16 @@ export const isReply = () => isNotNull(posts.replyingTo)
 /** Filter out the posts those have a significant amount of views, but no engagement. */
 export const minimalEngagement = () => or(gte(posts.engagementCount, 5), lte(posts.viewCount, 50));
 
+export const mainFeedMaxAge = 1000 * 60 * 60 * 24 * 2  // 2 days
+
 /** Get the date of the max age of the posts. */
-export const maxAge = () => {
-    const maxAge = 1000 * 60 * 60 * 24 * 2*10 // 2 days
-    return new Date(Date.now() - maxAge)
+export const maxDate = () => {
+    return new Date(Date.now() - mainFeedMaxAge)
 }
 
 /** Filter out the posts those are older than 2 days */
 export const recencyFilter = () => {
-    const maxAgeDate = maxAge()
+    const maxAgeDate = maxDate()
     return gt(posts.createdAt, maxAgeDate)
 }
 

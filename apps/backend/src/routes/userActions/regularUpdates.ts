@@ -14,7 +14,7 @@ import { standardJobs } from "../../jobs/updates";
 import { postViewCounterRedis } from "../../jobs/viewCount";
 import { redisClient } from "../../redis/connect";
 import { selectTargetPosts } from "../../userActions/posts/common";
-import { postLikeCounterRedis } from "../../userActions/posts/like";
+import { postLikeCounterRedis } from "../../jobs/likeCount";
 
 const router = Router();
 

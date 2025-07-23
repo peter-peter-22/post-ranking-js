@@ -1,10 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
+import { createLikeNotification } from "../../db/controllers/notifications/createNotification";
 import { likes } from "../../db/schema/likes";
 import { incrementLikeCounter } from "../../jobs/likeCount";
-import { redisClient } from "../../redis/connect";
 import { selectTargetPost } from "./common";
-import { createLikeNotification } from "../../db/controllers/notifications/createNotification";
 
 export async function likePost(postId: string, userId: string, value: boolean) {
     // Handle changes in the DB
@@ -45,10 +44,4 @@ async function deleteLike(postId: string, userId: string) {
             eq(likes.userId, userId),
             eq(likes.postId, postId)
         ))
-    // Decrement the like counter in redis
-    await redisClient.decr(postLikeCounterRedis(postId))
-}
-
-export function postLikeCounterRedis(postId: string) {
-    return `likeCount/${postId}`
 }

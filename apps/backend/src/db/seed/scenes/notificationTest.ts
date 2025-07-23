@@ -1,13 +1,12 @@
 import { eq } from "drizzle-orm"
 import { db } from "../.."
+import { follow } from "../../../userActions/follow"
+import { insertPost } from "../../../userActions/posts/createPost"
+import { likePost } from "../../../userActions/posts/like"
 import { follows } from "../../schema/follows"
 import { likes } from "../../schema/likes"
 import { notifications } from "../../schema/notifications"
 import { posts } from "../../schema/posts"
-import { likePost } from "../../../userActions/posts/like"
-import { follow } from "../../../userActions/follow"
-import { createReplies } from "../../../userActions/posts/createPost"
-import { createMentionNotifications, createReplyNotification } from "../../controllers/notifications/createNotification"
 import { UserCommon, users } from "../../schema/users"
 
 export async function notificationTest(viewer: UserCommon) {
@@ -21,14 +20,13 @@ export async function notificationTest(viewer: UserCommon) {
         await likePost(post.id, user.id, true)
         await follow(user.id, viewer.id)
     }
-    const replies = await createReplies(actors.map(user => ({
-        userId: user.id,
-        text: "reply text @main_user",
-        replyingTo: post.id
-    })))
-    for (const reply of replies) {
-        if (reply.repliedUser && reply.replyingTo)
-            await createReplyNotification(reply.repliedUser, reply.replyingTo, reply.createdAt)
-        await createMentionNotifications(reply.mentions, reply.id, reply.createdAt)
-    }
+    await Promise.all(
+        actors
+            .map(user => ({
+                userId: user.id,
+                text: "reply text @main_user",
+                replyingTo: post.id
+            }))
+            .map(reply => insertPost(reply))
+    )
 }

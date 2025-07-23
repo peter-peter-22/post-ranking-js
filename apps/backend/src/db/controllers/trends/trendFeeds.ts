@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, lte } from "drizzle-orm";
 import { db } from "../..";
 import { HttpError } from "../../../middlewares/errorHandler";
-import { trendsPerPage } from "../../../redis/trendFeeds/common";
+import { trendsPerPage } from "../../../redis/feeds/trendFeeds/common";
 import { trends } from "../../schema/trends";
 import { userClusterTrends } from "../../schema/userClusterTrends";
 import { User } from "../../schema/users";

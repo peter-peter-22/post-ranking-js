@@ -1,12 +1,13 @@
 import { inArray } from "drizzle-orm";
-import { db } from "../../db";
-import { posts } from "../../db/schema/posts";
+import { db } from "../../../db";
+import { posts } from "../../../db/schema/posts";
 import { ClientUser } from "@me/schemas/src/zod/user";
-import { HttpError } from "../../middlewares/errorHandler";
-import { redisClient } from "../connect";
-import { candidateColumns } from "../../posts/common";
-import { personalizePosts, PersonalPost } from "../../posts/hydratePosts";
+import { HttpError } from "../../../middlewares/errorHandler";
+import { redisClient } from "../../connect";
+import { candidateColumns } from "../../../posts/common";
+import { personalizePosts, PersonalPost } from "../../../posts/hydratePosts";
 import { minCandidates, postFeedTTL, postsPerRequest } from "./common";
+import { User } from "../../../db/schema/users";
 
 type PostFeedMeta<TPageParams> = {
     previousPostCount?: number,
@@ -29,13 +30,13 @@ export async function getPaginatedRankedPosts<TPageParams>({
 }: {
     getMore: (pageParams?: TPageParams) => Promise<{ posts: PersonalPost[], pageParams: TPageParams } | undefined>,
     feedName: string,
-    user: ClientUser,
+    user: User,
     offset: number,
     minRemaining?: number,
     ttl?: number
 }) {
     console.log(`Requested ranked post feed "${feedName}" for user "${user.id}", offset: ${offset}`)
-    const key = `postFeeds/${feedName}/${user.id}`
+    const key = `postFeeds:${feedName}:${user.id}`
     const metaKey = key + ":meta"
     const listKey = key + ":list"
 
@@ -154,7 +155,7 @@ function postsToZSet(posts: PersonalPost[]) {
 }
 
 /** Fetch the posts of the provided ids. */
-async function postsFromIds(ids: ZSetEntry[], user: ClientUser) {
+async function postsFromIds(ids: ZSetEntry[], user: User) {
     // Exit of no ids provided
     if (ids.length === 0) return []
 

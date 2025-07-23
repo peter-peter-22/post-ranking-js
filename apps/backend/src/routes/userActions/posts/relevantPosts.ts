@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { authRequestStrict } from '../../../authentication';
 import { BasicFeedSchema } from '../../../posts/common';
-import { getPaginatedRankedPosts } from '../../../redis/postFeeds/rankedPosts';
+import { getPaginatedRankedPosts } from '../../../redis/feeds/postFeeds/rankedPosts';
 import { getRelevantPosts, RelevantPostsPageParams } from '../../../posts/relevantPosts';
 import { postProcessPosts } from '../../../posts/postProcessPosts';
 

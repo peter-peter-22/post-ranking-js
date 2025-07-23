@@ -1,7 +1,7 @@
 import { and, eq, lt, SQL, sql } from "drizzle-orm"
 import { db } from "../../db"
 import { posts } from "../../db/schema/posts"
-import { postsPerRequest } from "../../redis/postFeeds/common"
+import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
 import { candidateColumns } from "../common"
 import { noPending } from "../filters"
 

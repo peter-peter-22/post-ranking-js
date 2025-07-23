@@ -1,0 +1,14 @@
+###
+GET http://localhost:3000/test/readPosts
+
+###
+GET http://localhost:3000/test/readUsers
+
+###
+GET http://localhost:3000/test/readEnrichedPosts
+
+###
+GET http://localhost:3000/test/readEnrichedUsers
+
+###
+GET http://localhost:3000/test/readEnrichedUsersGuest

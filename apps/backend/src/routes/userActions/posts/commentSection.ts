@@ -5,7 +5,7 @@ import { CommentsPageParams, getReplies } from '../../../posts/comments/getRepli
 import { BasicFeedSchema } from '../../../posts/common';
 import { PersonalPost } from '../../../posts/hydratePosts';
 import { getPaginatedData } from '../../../redis/pagination';
-import { postFeedTTL } from '../../../redis/postFeeds/common';
+import { postFeedTTL } from '../../../redis/feeds/postFeeds/common';
 import { postProcessPosts } from '../../../posts/postProcessPosts';
 
 const router = Router();

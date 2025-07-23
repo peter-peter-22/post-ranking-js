@@ -1,7 +1,7 @@
 import { desc, lt } from "drizzle-orm"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
-import { postsPerRequest } from "../../redis/postFeeds/common"
+import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
 import { SingleDatePageParams } from "../common"
 import { personalizePosts } from "../hydratePosts"
 import { postSearchQuery } from "./postSearchQuery"

@@ -1,7 +1,8 @@
 import { eq, InferInsertModel, InferSelectModel, isNotNull, isNull, SQL, sql } from 'drizzle-orm';
 import { boolean, foreignKey, index, integer, jsonb, pgTable, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { embeddingVector, keyword, MediaFile } from '../common';
+import { embeddingVector, keyword } from '../common';
 import { users } from './users';
+import { ServerMedia } from '@me/schemas/src/zod/media';
 
 // Queries and their indexes
 
@@ -57,7 +58,7 @@ export const posts = pgTable('posts', {
     //is the post published or not. pending posts need an id to define where their media is uploaded.
     pending: boolean().notNull().default(false),
     //the files those belong to this post.
-    media: jsonb().$type<MediaFile[]>(),
+    media: jsonb().$type<ServerMedia[]>(),
     //score based on engagement rate to rank comments
     commentScore: real().notNull().generatedAlwaysAs(
         (): SQL => sql`

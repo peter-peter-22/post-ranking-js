@@ -10,7 +10,7 @@ import { userColumns, UserCommon, users } from '../../../db/schema/users';
 import { HttpError } from '../../../middlewares/errorHandler';
 import { BasicFeedSchema, SingleDatePageParams } from '../../../posts/common';
 import { getPaginatedData } from '../../../redis/pagination';
-import { userFeedTTL } from '../../../redis/userFeeds/common';
+import { userFeedTTL } from '../../../redis/feeds/userFeeds/common';
 
 const router = Router();
 

@@ -3,7 +3,7 @@ import { scheduleEngagementHistoryUpdate } from "./engagementHistory";
 import { standardJobs } from "./updates";
 
 export function postClickCounterRedis(postId: string) {
-    return `clickCount/${postId}`
+    return `post:${postId}:counters:click`
 }
 
 export async function incrementClickCounter(postId: string, userId: string, add: number) {

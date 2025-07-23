@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { authRequestStrict } from '../../../authentication';
 import { getWhoToFollow } from '../../../db/controllers/users/whoToFollow';
 import { BasicFeedSchema } from '../../../posts/common';
-import { usersPerRequest } from '../../../redis/userFeeds/common';
+import { usersPerRequest } from '../../../redis/feeds/userFeeds/common';
 
 const router = Router();
 

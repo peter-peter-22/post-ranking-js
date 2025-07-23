@@ -3,7 +3,7 @@ import { scheduleEngagementHistoryUpdate } from "./engagementHistory";
 import { standardJobs } from "./updates";
 
 export function postReplyCounterRedis(postId: string) {
-    return `replyCount/${postId}`
+    return `post:${postId}:counters:reply`
 }
 
 export async function incrementReplyCounter(postId: string, userId: string, add: number) {

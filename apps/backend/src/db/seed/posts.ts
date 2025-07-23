@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { exampleComments, examplePosts } from '../../bots/examplePosts';
-import { createPosts } from '../../userActions/posts/createPost';
-import { UserCommon } from '../schema/users';
+import { User, UserCommon } from '../schema/users';
 import { getAllBots } from './utils';
 import { PostToInsert } from '../schema/posts';
+import { bulkInsertPosts } from '../../userActions/posts/createPost';
 
 /** The age interval where the posts are created in days. */
 const ageInterval = 10
@@ -14,7 +14,7 @@ const ageInterval = 10
  * @param users possible publishers
  * @returns post to insert
  */
-function createRandomPostFromRandomUser(users: UserCommon[]): PostToInsert {
+function createRandomPostFromRandomUser(users: User[]): PostToInsert {
     //randomly selected user
     const user = users[Math.floor(Math.random() * users.length)];
     return createRandomPost(user)
@@ -26,7 +26,7 @@ function createRandomPostFromRandomUser(users: UserCommon[]): PostToInsert {
  * @param users the publisher
  * @returns post to insert
  */
-export function createRandomPost(user: UserCommon): PostToInsert {
+export function createRandomPost(user: User): PostToInsert {
     const topic = getRandomTopicFromUser(user)
     return {
         userId: user.id,
@@ -41,7 +41,7 @@ export function createRandomPost(user: UserCommon): PostToInsert {
  * @param user the user to get the topic from
  * @returns a random topic from the user interests
 */
-export function getRandomTopicFromUser(user: UserCommon) {
+export function getRandomTopicFromUser(user: User) {
     return user.interests[Math.floor(Math.random() * user.interests.length)]
 }
 
@@ -80,7 +80,7 @@ export function generateReplyText(topic: string) {
 export async function seedPosts(count: number) {
     const allBots = await getAllBots()
     const postsToInsert = Array(count).fill(null).map(() => createRandomPostFromRandomUser(allBots))
-    const allPosts = await createPosts(postsToInsert)
+    const allPosts = await bulkInsertPosts(postsToInsert)
     console.log(`Created ${count} posts`)
     return allPosts;
 }

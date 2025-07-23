@@ -5,7 +5,8 @@ import { env } from "../zod/env";
 
 /** Redis client for caching. */
 const redisClient = redis.createClient({
-    url: env.REDIS_URL
+    url: env.REDIS_URL,
+    database: 0
 });
 
 redisClient.on('error', (err) => {

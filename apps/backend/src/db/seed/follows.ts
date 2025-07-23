@@ -4,7 +4,7 @@ import { updateAllFollowCounts } from "../controllers/users/follow/count";
 import { follows, FollowToInsert } from "../schema/follows";
 import { ClientUser } from "@me/schemas/src/zod/user";
 import { chunkedInsert } from "../utils/chunkedInsert";
-import { updateFollowSnapshots } from "./groups/memory caching/updateSnapshots";
+import { User } from "../schema/users";
 
 /** Chance to follow when the follower is interested in a topic of the followable */
 const chanceToFollowInterest = 0.3
@@ -18,7 +18,7 @@ const chanceToFollowIrrelevant = 0.02
  * @param posts all possibble followeds
  * @returns array of follows
  */
-async function createRandomFollows(from: ClientUser[], to: ClientUser[]) {
+async function createRandomFollows(from: User[], to: User[]) {
     console.log(`Creating follows. Max results: ${from.length * to.length}`)
     /** The total count of the inserted rows. */
     let count = 0
@@ -40,8 +40,6 @@ async function createRandomFollows(from: ClientUser[], to: ClientUser[]) {
                         .values(data)
                         .onConflictDoNothing();
                 })
-                // Update follow snapshots
-                await updateFollowSnapshots(followsToInsert)
             }
         })
     )
@@ -55,7 +53,7 @@ async function createRandomFollows(from: ClientUser[], to: ClientUser[]) {
  * @param followables all followable users
  * @returns array of follows
  */
-function createRandomFollowsForUser(user: ClientUser, followables: ClientUser[]): FollowToInsert[] {
+function createRandomFollowsForUser(user: User, followables: User[]): FollowToInsert[] {
     const follows: FollowToInsert[] = [];
     followables.forEach(followable => {
         /** true if the followable user has at least one topic the follower is interested about */
@@ -70,7 +68,7 @@ function createRandomFollowsForUser(user: ClientUser, followables: ClientUser[])
     return follows
 }
 
-export async function seedFollows({ from, to }: { from: ClientUser[], to: ClientUser[] }) {
+export async function seedFollows({ from, to }: { from: User[], to: User[] }) {
     await createRandomFollows(from, to)
     await updateAllFollowCounts()
 }

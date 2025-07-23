@@ -1,15 +1,17 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
+import { createMentionNotifications, createReplyNotification } from "../../db/controllers/notifications/createNotification";
 import { addMedia } from "../../db/controllers/pendingUploads/updateMedia";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { chunkedInsert } from "../../db/utils/chunkedInsert";
-import { PostToFinalize } from "../../routes/userActions/posts/createPost";
-import { prepareAnyPost } from "./preparePost";
 import { incrementReplyCounter } from "../../jobs/replyCount";
-import { createMentionNotifications, createReplyNotification } from "../../db/controllers/notifications/createNotification";
+import { PostToFinalize } from "../../routes/userActions/posts/createPost";
+import { prepareAnyPost, preparePosts } from "./preparePost";
 
 /** Insert posts to the database. */
 export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {
+    // Calculate metadata
+    postsToInsert=await preparePosts(postsToInsert)
     // Insert to db and return
     console.log(`Inserting posts`)
     const inserted: Post[] = []

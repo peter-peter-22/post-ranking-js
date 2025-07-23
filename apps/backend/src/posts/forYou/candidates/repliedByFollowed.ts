@@ -2,7 +2,7 @@ import { aliasedTable, and, desc, eq, gt, inArray } from "drizzle-orm";
 import { db } from "../../../db";
 import { posts } from "../../../db/schema/posts";
 import { candidateColumns } from "../../common";
-import { isPost, maxAge, minimalEngagement, noPending, notDisplayed, recencyFilter } from "../../filters";
+import { isPost, maxDate, minimalEngagement, noPending, notDisplayed, recencyFilter } from "../../filters";
 
 /** Max count of posts */
 const count = 200;
@@ -18,7 +18,7 @@ export function getRepliedByFollowedCandidates({ followedUsers, skipIds }: { fol
         .where(
             and(
                 inArray(replies.userId, followedUsers), // TODO: this is possibbly not efficient 
-                gt(replies.createdAt, maxAge())
+                gt(replies.createdAt, maxDate())
             )
         )
         .orderBy(desc(replies.createdAt))

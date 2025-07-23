@@ -4,7 +4,7 @@ import { getTimeBuckets } from "../../../db/controllers/posts/timeBuckets";
 import { posts } from "../../../db/schema/posts";
 import { ClientUser } from "@me/schemas/src/zod/user";
 import { candidateColumns } from "../../common";
-import { maxAge, minimalEngagement } from "../../filters";
+import { maxDate, minimalEngagement } from "../../filters";
 import { personalizePosts } from "../../hydratePosts";
 
 export type ESimPageParams = {
@@ -28,7 +28,7 @@ export async function getEmbeddingSimilarityCandidates({
     if (!firstPage && !pageParams || !user.embeddingNormalized) return
 
     // Get the searched time buckets
-    const timeBuckets = getTimeBuckets(maxAge(), new Date(), false, true)
+    const timeBuckets = getTimeBuckets(maxDate(), new Date(), false, true)
     console.log(`Selecting embedding similarity candidates from the following time buckets: ${timeBuckets.join(', ')}`)
 
     // Select the recent relevant posts.

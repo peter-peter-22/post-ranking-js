@@ -10,6 +10,8 @@ import update from "./update";
 import userActions from "./userActions/index";
 import getPost from "./getPost";
 import getUser from "./getUser";
+import test from "./development/test";
+
 
 const router = Router();
 
@@ -21,5 +23,6 @@ router.use("/update", update);
 router.use("/userActions", userActions);
 router.use("/getPost", getPost)
 router.use("/getUser", getUser)
+router.use("/test", test)
 
 export default router;

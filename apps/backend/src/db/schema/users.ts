@@ -1,6 +1,7 @@
+import { ServerMedia } from '@me/schemas/src/zod/media';
 import { getTableColumns, InferInsertModel, InferSelectModel, SQL, sql } from 'drizzle-orm';
 import { boolean, index, integer, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { embeddingVector, MediaFile } from '../common';
+import { embeddingVector } from '../common';
 import { clusters } from '../schema/clusters';
 
 /** The users. */
@@ -17,8 +18,8 @@ export const users = pgTable('users', {
     embeddingNormalized: embeddingVector("embedding_normalized"),
     clusterId: integer().references(() => clusters.id, { onDelete: "set null" }),
     fullName: varchar({ length: 101 }).generatedAlwaysAs((): SQL => sql`${users.name} || ' ' || ${users.handle}`),
-    avatar: jsonb().$type<MediaFile>(),
-    banner: jsonb().$type<MediaFile>(),
+    avatar: jsonb().$type<ServerMedia>(),
+    banner: jsonb().$type<ServerMedia>(),
     bio: varchar({ length: 500 })
 }, (t) => [
     index().on(t.clusterId),
@@ -33,5 +34,5 @@ export type User = InferSelectModel<typeof users>;
 export type UserToInsert = InferInsertModel<typeof users>;
 
 const {embedding,embeddingNormalized,bot,fullName,interests,...userColumns}=getTableColumns(users)
-export {userColumns}
+export { userColumns };
 export type UserCommon = Pick<User, keyof typeof userColumns>;

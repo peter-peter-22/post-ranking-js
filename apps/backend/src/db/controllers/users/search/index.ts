@@ -1,6 +1,6 @@
 import { and, desc, ilike, lt, lte } from "drizzle-orm"
 import { db } from "../../.."
-import { usersPerRequest } from "../../../../redis/userFeeds/common"
+import { usersPerRequest } from "../../../../redis/feeds/userFeeds/common"
 import { User, users } from "../../../schema/users"
 import { personalUserColumns } from "../getUser"
 

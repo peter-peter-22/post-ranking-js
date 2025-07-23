@@ -6,7 +6,8 @@ import { likes } from "../../schema/likes";
 import { notifications } from "../../schema/notifications";
 import { posts } from "../../schema/posts";
 import { users } from "../../schema/users";
-import { notificationRedisTTL, notificationsPerPage, notificationsRedisKey, redisSetPlaceholder, userPreviewsPerNotification } from "./common";
+import { notificationRedisTTL, notificationsPerPage, notificationsRedisKey, userPreviewsPerNotification } from "./common";
+import { createPersistentSet } from "../../../redis/persistentSet";
 
 export async function prepareNotifications(userId: string, offset: number) {
     // If this is the first page, calcualte the secondary data of the notifications and clear redis
@@ -16,7 +17,7 @@ export async function prepareNotifications(userId: string, offset: number) {
             ensureData(userId),
             redisClient.multi()
                 .del(key)
-                .sAdd(key, redisSetPlaceholder)
+                .sAdd(key, createPersistentSet([]))
                 .expire(key, notificationRedisTTL)
                 .exec()
         ])

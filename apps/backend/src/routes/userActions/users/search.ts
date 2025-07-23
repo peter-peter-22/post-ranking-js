@@ -6,7 +6,7 @@ import { PersonalUser } from '../../../db/controllers/users/getUser';
 import { FollowerCountPageParams, userSearch } from '../../../db/controllers/users/search';
 import { BasicFeedSchema } from '../../../posts/common';
 import { getPaginatedData } from '../../../redis/pagination';
-import { userFeedTTL } from '../../../redis/userFeeds/common';
+import { userFeedTTL } from '../../../redis/feeds/userFeeds/common';
 import { postProcessUsers } from '../../../db/controllers/users/postProcessUsers';
 
 const router = Router();

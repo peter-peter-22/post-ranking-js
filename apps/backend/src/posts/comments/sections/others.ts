@@ -5,7 +5,7 @@ import { ClientUser } from "@me/schemas/src/zod/user";
 import { candidateColumns, SingleDatePageParams } from "../../common";
 import { personalizePosts } from "../../hydratePosts";
 import { replyCommonFilters } from "../getReplies";
-import { postsPerRequest } from "../../../redis/postFeeds/common";
+import { postsPerRequest } from "../../../redis/feeds/postFeeds/common";
 
 /** Get the rest of the replies.  */
 export async function getOtherComments({

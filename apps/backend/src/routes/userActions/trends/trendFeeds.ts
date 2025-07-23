@@ -4,7 +4,7 @@ import { TrendForClient } from '../../../db/controllers/trends/getTrends';
 import { globalTrendFeed, personalTrendFeed, TrendPostCountPageParams, TrendPostScorePageParams } from '../../../db/controllers/trends/trendFeeds';
 import { BasicFeedSchema } from '../../../posts/common';
 import { getPaginatedData } from '../../../redis/pagination';
-import { userFeedTTL } from '../../../redis/userFeeds/common';
+import { userFeedTTL } from '../../../redis/feeds/userFeeds/common';
 
 const router = Router();
 

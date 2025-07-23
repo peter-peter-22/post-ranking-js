@@ -2,7 +2,7 @@ import { incrementRedisCounter } from "./common";
 import { standardJobs } from "./updates";
 
 export function userFollowingCountRedis(userId: string) {
-    return `followingCount/${userId}`
+    return`user:${userId}:counters:following`
 }
 
 export async function incrementFollowingCounter(userId: string, add: number) {

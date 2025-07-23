@@ -1,9 +1,9 @@
 import { postProcessUsers } from "../db/controllers/users/postProcessUsers";
 import { postClickCounterRedis } from "../jobs/clickCount";
+import { postLikeCounterRedis } from "../jobs/likeCount";
 import { postReplyCounterRedis } from "../jobs/replyCount";
 import { postViewCounterRedis } from "../jobs/viewCount";
 import { redisClient } from "../redis/connect";
-import { postLikeCounterRedis } from "../userActions/posts/like";
 import { PersonalPost } from "./hydratePosts";
 
 /** Apply changes to the fetched posts before sending them to the client.

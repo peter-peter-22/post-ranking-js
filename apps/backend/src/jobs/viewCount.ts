@@ -2,7 +2,7 @@ import { incrementRedisCounter } from "./common";
 import { standardJobs } from "./updates";
 
 export function postViewCounterRedis(postId: string) {
-    return `viewCount/${postId}`
+    return `post:${postId}:counters:view`
 }
 
 export async function incrementViewCounter(postId: string, add: number) {
