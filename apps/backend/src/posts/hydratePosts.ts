@@ -66,7 +66,7 @@ export function personalizePosts(source:CandidateSubquery, user: User | undefine
             views: postsToHydrate.viewCount,
             engagementCount:postsToHydrate.engagementCount,
             similarity: similarity,
-            engagementHistory: user ? engagementHistory : sql<EngagementHistory>`null`,
+            engagementHistory: user ? engagementHistory : sql<EngagementHistory|null>`null`,
             repliedByFollowed: isRepliedByFollowedSq,
             liked: likedByViewerSq,
             user: personalUserColumns(user?.id),
@@ -79,7 +79,6 @@ export function personalizePosts(source:CandidateSubquery, user: User | undefine
             mentions:postsToHydrate.mentions,
             hashtags:postsToHydrate.hashtags,
             embeddingText: postsToHydrate.embeddingText,
-            source:postsToHydrate.source
         })
         .from(postsToHydrate)
         .innerJoin(users, eq(users.id, postsToHydrate.userId))

@@ -1,7 +1,7 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { User, users } from "../../db/schema/users";
-import { cachedBulkHSetRead } from "../cachedBulkRead";
+import { cachedBulkHSetRead } from "../bulkHSetRead";
 import { userContentTTL } from "../common";
 
 export function userContentRedisKey(id: string) {
@@ -26,8 +26,8 @@ export const cachedUsers = cachedBulkHSetRead<User>({
         banner: "json",
         bio: "string"
     },
-    ttlOnRead: userContentTTL,
-    ttlOnWrite: () => userContentTTL,
+    getTTL: () => userContentTTL,
     getKey: userContentRedisKey,
-    fallback: async (ids: string[]) => await db.select().from(users).where(inArray(users.id, ids))
+    fallback: async (ids: string[]) => await db.select().from(users).where(inArray(users.id, ids)),
+    getId: (user: User) => user.id
 })

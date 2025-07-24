@@ -1,9 +1,8 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { Post, posts } from "../../db/schema/posts";
-import { mainFeedMaxAge } from "../../posts/filters";
-import { cachedBulkHSetRead } from "../cachedBulkRead";
-import { postContentTTL } from "../common";
+import { cachedBulkHSetRead } from "../bulkHSetRead";
+import { getMainFeedTTL, postContentTTL } from "../common";
 
 export function postContentRedisKey(id: string) {
     return `post:${id}:content`;
@@ -37,12 +36,10 @@ export const cachedPosts = cachedBulkHSetRead<Post>({
         deleted: "boolean",
         repliedUser: "string",
     },
-    ttlOnRead: postContentTTL,
-    ttlOnWrite: (post: Post) => {
-        const ageMs = new Date().getTime() - post.createdAt.getTime()
-        const remainingTimeS = (mainFeedMaxAge - ageMs) / 1000
-        return Math.max(remainingTimeS, postContentTTL)
+    getTTL: (post: Post) => {
+        return getMainFeedTTL(post.createdAt, postContentTTL)
     },
     getKey: postContentRedisKey,
-    fallback: async (ids: string[]) => await db.select().from(posts).where(inArray(posts.id, ids))
+    fallback: async (ids: string[]) => await db.select().from(posts).where(inArray(posts.id, ids)),
+    getId: (post: Post) => post.id
 })
