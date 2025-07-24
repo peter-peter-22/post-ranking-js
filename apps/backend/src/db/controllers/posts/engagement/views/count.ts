@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../../..";
-import { postViewCounterRedis } from "../../../../../jobs/viewCount";
+import { postViewCounterRedis } from "../../../../../redis/counters/viewCount";
 import { redisClient } from "../../../../../redis/connect";
 import { posts } from "../../../../schema/posts";
 import { views } from "../../../../schema/views";

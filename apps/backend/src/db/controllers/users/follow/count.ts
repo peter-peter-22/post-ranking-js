@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../..";
-import { userFollowingCountRedis } from "../../../../jobs/followingCount";
+import { userFollowingCountRedis } from "../../../../redis/counters/followingCount";
 import { redisClient } from "../../../../redis/connect";
 import { follows } from "../../../schema/follows";
 import { users } from "../../../schema/users";
-import { userFollowerCountRedis } from "../../../../jobs/followerCount";
+import { userFollowerCountRedis } from "../../../../redis/counters/followerCount";
 
 /**Recalculate the follower count of a user. */
 export async function updateFollowerCount(userId: string) {

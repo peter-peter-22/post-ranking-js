@@ -1,5 +1,5 @@
-import { userFollowerCountRedis } from "../../../jobs/followerCount";
-import { userFollowingCountRedis } from "../../../jobs/followingCount";
+import { userFollowerCountRedis } from "../../../redis/counters/followerCount";
+import { userFollowingCountRedis } from "../../../redis/counters/followingCount";
 import { redisClient } from "../../../redis/connect";
 import { PersonalUser } from "./getUser";
 

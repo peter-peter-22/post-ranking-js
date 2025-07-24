@@ -1,4 +1,4 @@
-import { Job, Queue, Worker } from 'bullmq';
+import { Job, JobsOptions, Queue, Worker } from 'bullmq';
 import { updateLikeCount } from '../db/controllers/posts/engagement/like/count';
 import { ConnectionOptions } from "bullmq";
 import { env } from 'process';
@@ -10,38 +10,47 @@ import { defaultDelay } from './common';
 import { updateUserEngagementHistory } from '../db/controllers/engagementHistory/update';
 
 /** Redis client config for job queue. */
-const redisJobs: ConnectionOptions = {
+const redisJobsConnection: ConnectionOptions = {
     url: env.REDIS_URL,
     db: 1
 }
 
 /** Job queue shared by updates those require a single id. */
-export const updateQueue = new Queue('updateQueue', {
-    connection: redisJobs,
+export const queue = new Queue('updateQueue', {
+    connection: redisJobsConnection,
+    defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+            type: 'exponential',
+            delay: 1000
+        },
+        removeOnComplete: true,
+        removeOnFail: true,
+    }
 });
 
-export const updateWorker = new Worker(
+export const worker = new Worker(
     'updateQueue',
     processUpdateJob,
     {
-        connection: redisJobs,
-        concurrency: 10
+        connection: redisJobsConnection,
+        concurrency: 10,
     }
 );
 
-updateWorker.on('active', job => {
+worker.on('active', job => {
     console.log(`Job ${job.id} started`);
 });
 
-updateWorker.on('completed', job => {
+worker.on('completed', job => {
     console.log(`Job ${job.id} completed`);
 });
 
-updateWorker.on('failed', (job, err) => {
+worker.on('failed', (job, err) => {
     console.error(`Job ${job?.id} failed:`, err);
 });
 
-updateWorker.on('error', err => {
+worker.on('error', err => {
     console.error('Worker error:', err);
 });
 
@@ -75,29 +84,27 @@ async function processUpdateJob(job: Job): Promise<void> {
 }
 
 function jobCategory<TData, TName extends string>() {
-    async function addJob(category: TName, data: TData, delay: number = defaultDelay) {
-        return await updateQueue.add(
+    async function addJob(category: TName, data: TData, key?: string, delay?: number, options?: JobsOptions) {
+        return await queue.add(
             category,
             data,
             {
-                jobId: `${category}/${data}`,
+                jobId: key ? `${category}/${key}` : undefined,
                 delay,
-                removeOnComplete: true,
-                removeOnFail: true
+                ...options
             }
         );
     }
 
-    async function addJobs(jobs: { category: TName, data: TData, delay?: number }[]) {
-        return await updateQueue.addBulk(
+    async function addJobs(jobs: { category: TName, data: TData, delay?: number, key?: string }[], options?: JobsOptions) {
+        return await queue.addBulk(
             jobs.map(job => ({
                 name: job.category,
                 data: job.data,
                 opts: {
-                    jobId: `${job.category}/${job.data}`,
+                    jobId: job.key ? `${job.category}/${job.key}` : undefined,
                     delay: job.delay,
-                    removeOnComplete: true,
-                    removeOnFail: true
+                    ...options
                 }
             }))
         );

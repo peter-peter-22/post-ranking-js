@@ -1,8 +1,7 @@
-import { userInfo } from "os";
 import { Post } from "../../db/schema/posts";
-import { enrichUsers } from "../users/enrich";
 import { PersonalPost } from "../../posts/hydratePosts";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
+import { enrichUsers } from "../users/enrich";
 
 export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
     // Format 

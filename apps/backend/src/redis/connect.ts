@@ -15,5 +15,4 @@ redisClient.on('error', (err) => {
 
 redisClient.connect().then(() => console.log(`Redis connected`))
 
-
 export { redisClient }

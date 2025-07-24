@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { follows } from "../db/schema/follows";
-import { incrementFollowingCounter } from "../jobs/followingCount";
-import { incrementFollowerCounter } from "../jobs/followerCount";
+import { incrementFollowingCounter } from "../redis/counters/followingCount";
+import { incrementFollowerCounter } from "../redis/counters/followerCount";
 import { createFollowNotification } from "../db/controllers/notifications/createNotification";
 
 /**

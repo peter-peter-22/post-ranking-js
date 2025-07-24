@@ -1,5 +1,5 @@
 import { longDelay } from "./common";
-import { standardJobs } from "./updates";
+import { standardJobs } from "./queue";
 
 export async function scheduleEngagementHistoryUpdate(userId: string) {
     await Promise.all([

@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { createLikeNotification } from "../../db/controllers/notifications/createNotification";
 import { likes } from "../../db/schema/likes";
-import { incrementLikeCounter } from "../../jobs/likeCount";
+import { incrementLikeCounter } from "../../redis/counters/likeCount";
 import { selectTargetPost } from "./common";
 
 export async function likePost(postId: string, userId: string, value: boolean) {

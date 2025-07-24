@@ -4,7 +4,7 @@ import { createMentionNotifications, createReplyNotification } from "../../db/co
 import { addMedia } from "../../db/controllers/pendingUploads/updateMedia";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { chunkedInsert } from "../../db/utils/chunkedInsert";
-import { incrementReplyCounter } from "../../jobs/replyCount";
+import { incrementReplyCounter } from "../../redis/counters/replyCount";
 import { PostToFinalize } from "../../routes/userActions/posts/createPost";
 import { prepareAnyPost, preparePosts } from "./preparePost";
 

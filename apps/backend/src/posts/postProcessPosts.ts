@@ -1,8 +1,8 @@
 import { postProcessUsers } from "../db/controllers/users/postProcessUsers";
-import { postClickCounterRedis } from "../jobs/clickCount";
-import { postLikeCounterRedis } from "../jobs/likeCount";
-import { postReplyCounterRedis } from "../jobs/replyCount";
-import { postViewCounterRedis } from "../jobs/viewCount";
+import { postClickCounterRedis } from "../redis/counters/clickCount";
+import { postLikeCounterRedis } from "../redis/counters/likeCount";
+import { postReplyCounterRedis } from "../redis/counters/replyCount";
+import { postViewCounterRedis } from "../redis/counters/viewCount";
 import { redisClient } from "../redis/connect";
 import { PersonalPost } from "./hydratePosts";
 

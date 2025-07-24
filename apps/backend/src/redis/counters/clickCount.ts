@@ -1,6 +1,6 @@
-import { incrementRedisCounter } from "./common";
-import { scheduleEngagementHistoryUpdate } from "./engagementHistory";
-import { standardJobs } from "./updates";
+import { incrementRedisCounter } from "../../jobs/common";
+import { scheduleEngagementHistoryUpdate } from "../../jobs/engagementHistory";
+import { standardJobs } from "../../jobs/queue";
 
 export function postClickCounterRedis(postId: string) {
     return `post:${postId}:counters:click`

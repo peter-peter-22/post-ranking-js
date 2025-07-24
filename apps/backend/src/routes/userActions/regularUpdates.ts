@@ -6,15 +6,15 @@ import { db } from "../../db";
 import { getNotificationCount } from "../../db/controllers/notifications/getCount";
 import { clicks } from "../../db/schema/clicks";
 import { views } from "../../db/schema/views";
-import { postClickCounterRedis } from "../../jobs/clickCount";
+import { postClickCounterRedis } from "../../redis/counters/clickCount";
 import { defaultDelay } from "../../jobs/common";
 import { scheduleEngagementHistoryUpdate } from "../../jobs/engagementHistory";
-import { postReplyCounterRedis } from "../../jobs/replyCount";
-import { standardJobs } from "../../jobs/updates";
-import { postViewCounterRedis } from "../../jobs/viewCount";
+import { postReplyCounterRedis } from "../../redis/counters/replyCount";
+import { standardJobs } from "../../jobs/queue";
+import { postViewCounterRedis } from "../../redis/counters/viewCount";
 import { redisClient } from "../../redis/connect";
 import { selectTargetPosts } from "../../userActions/posts/common";
-import { postLikeCounterRedis } from "../../jobs/likeCount";
+import { postLikeCounterRedis } from "../../redis/counters/likeCount";
 
 const router = Router();
 

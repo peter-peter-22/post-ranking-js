@@ -1,6 +1,6 @@
 import { aliasedTable, eq } from "drizzle-orm";
 import { db } from "../..";
-import { postReplyCounterRedis } from "../../../jobs/replyCount";
+import { postReplyCounterRedis } from "../../../redis/counters/replyCount";
 import { redisClient } from "../../../redis/connect";
 import { posts } from "../../schema/posts";
 
