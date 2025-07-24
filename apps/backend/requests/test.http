@@ -6,6 +6,8 @@ GET http://localhost:3000/test/readUsers
 
 ###
 GET http://localhost:3000/test/readEnrichedPosts
+Authorization: userhandle main_user
+content-type: application/json
 
 ###
 GET http://localhost:3000/test/readEnrichedUsers

@@ -11,7 +11,7 @@ function deserializeField(value: string | undefined, fieldType: FieldType) {
         case "number":
             return Number(value)
         case "boolean":
-            return Boolean(value)
+            return value === "true"
         case "json":
             return JSON.parse(value)
         case "date":
@@ -45,8 +45,8 @@ function serializeField(value: any, fieldType: FieldType): string | undefined {
     }
 }
 
-export type HSetSchema={ [key: string]: FieldType }
-export type HSetValue={ [key: string]: any }
+export type HSetSchema = { [key: string]: FieldType }
+export type HSetValue = { [key: string]: any }
 
 export function typedHSet<T extends HSetValue>(schema: HSetSchema) {
     const deserialize = (data: { [key: string]: string }): T => {

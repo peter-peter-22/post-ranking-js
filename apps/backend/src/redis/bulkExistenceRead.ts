@@ -21,13 +21,13 @@ export function cachedBulkExistenceCheck({
         const resultMap = new Map<string, boolean | undefined>(
             ids.map((id, i) => {
                 const result = results[i]
-                const value = result !== undefined ? Boolean(result) : undefined
+                const value = result !== undefined ? result === "true" : undefined
                 return [id, value]
             })
         )
         // Fallback to the db if there are missing posts
-        const missingIds = [...resultMap.entries()].filter(([_, value]) => value !== undefined).map(([id]) => id)
-        console.log(`Cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
+        const missingIds = [...resultMap.entries()].filter(([_, value]) => value === undefined).map(([id]) => id)
+        console.log(`Existence cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
         if (missingIds.length > 0) {
             // Fetch the missing values from the db
             const newIds = await fallback(missingIds)
@@ -52,5 +52,5 @@ export function cachedBulkExistenceCheck({
         return resultMap
     }
 
-    return {read}
+    return { read }
 }

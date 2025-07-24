@@ -39,8 +39,8 @@ export function cachedBulkHSetRead<T extends HSetValue>({
             })
         )
         // Fallback to the db if there are missing values
-        const missingIds = [...resultMap.entries()].filter(([_, value]) => value !== undefined).map(([id]) => id)
-        console.log(`Cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
+        const missingIds = [...resultMap.entries()].filter(([_, value]) => value === undefined).map(([id]) => id)
+        console.log(`Hset cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
         if (missingIds.length > 0) {
             // Fetch the missing values from the db
             const newData = await fallback(missingIds)

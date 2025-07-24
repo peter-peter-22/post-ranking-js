@@ -21,9 +21,9 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
     ])
     // Aggregate
     const enrichedPosts: PersonalPost[] = [...posts.values()].map(post => {
-        const liked = likes?.has(post.id) || false;
-        const viewed = views?.has(post.id) || false;
-        const clicked = clicks?.has(post.id) || false
+        const liked = likes?.get(post.id) || false;
+        const viewed = views?.get(post.id) || false;
+        const clicked = clicks?.get(post.id) || false
         const user = users.get(post.userId)
         if (!user) throw new Error("Missing user")
         return {
@@ -54,4 +54,5 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
             embeddingText: post.embeddingText,
         }
     })
+    return enrichedPosts
 }

@@ -5,7 +5,6 @@ import { likes } from "../../../../schema/likes";
 import { posts } from "../../../../schema/posts";
 import { postLikeCounterRedis } from "../../../../../jobs/likeCount";
 
-
 /** Recalculate the like count on a single post. */
 export async function updateLikeCount(postId: string) {
     const [updated] = await db.update(posts)
