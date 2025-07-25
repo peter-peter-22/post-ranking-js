@@ -10,12 +10,12 @@ export function getPersonalEngagementTTL(id: string, posts: Map<string, Post>) {
 
 export function cachedPersonalEngagements({
     getKey,
-    fallback
+    fallback,
 }: {
-    getKey: (postId: string,userId:string) => string,
-    fallback: (ids: string[],userId:string) => Promise<Set<string>>,
+    getKey: (postId: string, userId: string) => string,
+    fallback: (ids: string[], userId: string) => Promise<Set<string>>,
 }) {
-    const read = async (ids: string[], userId: string, posts: Map<string, Post>) => (
+    const get = async (ids: string[], userId: string, posts: Map<string, Post>) => (
         await cachedBulkExistenceCheck({
             getKey: (id: string) => getKey(id, userId),
             fallback: (ids: string[]) => fallback(ids, userId),
@@ -23,5 +23,5 @@ export function cachedPersonalEngagements({
         }).read(ids)
     )
 
-    return { read }
+    return { get }
 }

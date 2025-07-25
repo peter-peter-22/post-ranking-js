@@ -1,17 +1,16 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
-import { createMentionNotifications, createReplyNotification } from "../../db/controllers/notifications/createNotification";
 import { addMedia } from "../../db/controllers/pendingUploads/updateMedia";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { chunkedInsert } from "../../db/utils/chunkedInsert";
-import { incrementReplyCounter } from "../../redis/counters/replyCount";
+import { handlePostInsert } from "../../redis/postContent/write";
 import { PostToFinalize } from "../../routes/userActions/posts/createPost";
 import { prepareAnyPost, preparePosts } from "./preparePost";
 
 /** Insert posts to the database. */
 export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {
     // Calculate metadata
-    postsToInsert=await preparePosts(postsToInsert)
+    postsToInsert = await preparePosts(postsToInsert)
     // Insert to db and return
     console.log(`Inserting posts`)
     const inserted: Post[] = []
@@ -38,7 +37,7 @@ export async function insertPost(post: PostToInsert) {
         .insert(posts)
         .values(post)
         .returning()
-    handlePostInsert(created).catch(e => { console.error("Error after creating post", e) })
+    await handlePostInsert(created)
     return created
 }
 
@@ -57,17 +56,6 @@ export async function finalizePost(post: PostToFinalize) {
         .set({ ...valuesToUpdate, pending: false })
         .where(eq(posts.id, post.id))
         .returning()
-    handlePostInsert(created).catch(e => { console.error("Error after creating post", e) })
+    await handlePostInsert(created)
     return created
-}
-
-/** Handle notifications and other updates of a created post */
-async function handlePostInsert(post: Post) {
-    if (post.replyingTo && post.repliedUser) {
-        await Promise.all([
-            incrementReplyCounter(post.replyingTo, post.userId, 1),
-            createReplyNotification(post.repliedUser, post.replyingTo, post.createdAt, post.id),
-            createMentionNotifications(post.mentions, post.id, post.createdAt, post.userId),
-        ])
-    }
 }

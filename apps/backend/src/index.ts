@@ -5,7 +5,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import routes from "./routes";
 import { redisClient } from './redis/connect';
 import { db } from './db';
-import { queue, worker } from './jobs/queue';
+import { queue, worker } from './redis/jobs/queue';
 
 const app = express();
 const PORT = 3000;

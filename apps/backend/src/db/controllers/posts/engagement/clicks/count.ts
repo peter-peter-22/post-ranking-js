@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../../..";
-import { postClickCounterRedis } from "../../../../../redis/counters/clickCount";
 import { redisClient } from "../../../../../redis/connect";
 import { clicks } from "../../../../schema/clicks";
 import { posts } from "../../../../schema/posts";
+import { postContentRedisKey } from "../../../../../redis/postContent/read";
 
 /**Recalculate the click count of a post */
 export async function updateClickCount(postId: string) {
@@ -17,5 +17,5 @@ export async function updateClickCount(postId: string) {
         .returning({ clickCount: posts.clickCount })
     if (!updated) return
     // Update the counter in Redis
-    await redisClient.set(postClickCounterRedis(postId), updated.clickCount)
+    await redisClient.hSet(postContentRedisKey(postId), "clickCount", updated.clickCount.toString())
 }

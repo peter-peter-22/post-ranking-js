@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { Post, posts } from "../../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
+import { User } from "../../../db/schema/users";
 import { candidateColumns } from "../../common";
 import { personalizePosts } from "../../hydratePosts";
 import { replyCommonFilters } from "../getReplies";
@@ -12,7 +12,7 @@ export async function getPublisherComments({
     firstPage,
     post
 }: {
-    user: ClientUser,
+    user: User,
     firstPage: boolean,
     post: Post
 }) {

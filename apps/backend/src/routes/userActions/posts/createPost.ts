@@ -1,4 +1,4 @@
-import { MediaFileSchema } from '@me/schemas/src/zod/media';
+import { ServerMediaSchema } from '@me/schemas/src/zod/media';
 import { eq } from 'drizzle-orm';
 import { Request, Response, Router } from 'express';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ const router = Router();
 export const createPostSchema = z.object({
     text: z.string().optional(),
     replyingTo: z.string().optional(),
-    media: z.array(MediaFileSchema).optional()
+    media: z.array(ServerMediaSchema).optional()
 })
 export type PostToCreate = z.infer<typeof createPostSchema> & { userId: string }
 

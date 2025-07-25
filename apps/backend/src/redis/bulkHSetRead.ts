@@ -68,5 +68,13 @@ export function cachedBulkHSetRead<T extends HSetValue>({
         return resultMap
     }
 
-    return { read: fetch, schema: mySchema }
+    const write = async (data: T[]) => {
+        const multi = redisClient.multi()
+        for (const el of data) {
+            multi.hSet(getKey(el.id), mySchema.serialize(el))
+        }
+        await multi.exec()
+    }
+
+    return { read: fetch, schema: mySchema,write }
 }

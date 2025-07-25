@@ -1,11 +1,11 @@
 import { and, desc, lt } from "drizzle-orm";
 import { db } from "../../../db";
 import { Post, posts } from "../../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
+import { User } from "../../../db/schema/users";
+import { postsPerRequest } from "../../../redis/feeds/postFeeds/common";
 import { candidateColumns, SingleDatePageParams } from "../../common";
 import { personalizePosts } from "../../hydratePosts";
 import { replyCommonFilters } from "../getReplies";
-import { postsPerRequest } from "../../../redis/feeds/postFeeds/common";
 
 /** Get the rest of the replies.  */
 export async function getOtherComments({
@@ -14,7 +14,7 @@ export async function getOtherComments({
     post,
     pageParams,
 }: {
-    user: ClientUser,
+    user: User,
     firstPage: boolean,
     post: Post,
     pageParams?: SingleDatePageParams,

@@ -1,10 +1,10 @@
 import { and, arrayOverlaps, desc, gt, lt, or } from "drizzle-orm";
 import { db } from "../../../db";
 import { posts } from "../../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
+import { User } from "../../../db/schema/users";
 import { candidateColumns, DatePageParams } from "../../common";
 import { isPost, minimalEngagement, noPending, recencyFilter } from "../../filters";
-import { personalizePosts, PersonalPost, postsToHydrateQuery } from "../../hydratePosts";
+import { personalizePosts, postsToHydrateQuery } from "../../hydratePosts";
 
 /** Selecting candidate posts from trending topics.
  * @todo Can be accelerated by using timebuckets.
@@ -17,7 +17,7 @@ export async function getTrendCandidates({
     firstPage
 }: {
     trends: string[],
-    user: ClientUser,
+    user: User,
     count: number,
     pageParams?: DatePageParams,
     firstPage: boolean

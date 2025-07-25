@@ -1,14 +1,14 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { posts } from "../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
+import { User } from "../../db/schema/users";
 import { HttpError } from "../../middlewares/errorHandler";
 import { DatePageParams, deduplicatePosts, mergePostArrays } from "../common";
 import { ESimPageParams } from "../forYou/candidates/embedding";
 import { getTrendCandidates } from "../forYou/candidates/trending";
+import { postProcessPosts } from "../postProcessPosts";
 import { rankPosts } from "../ranker";
 import { getPostEmbeddingSimilarityCandidates } from "./candidates/embedding";
-import { postProcessPosts } from "../postProcessPosts";
 
 export type RelevantPostsPageParams = {
     trends?: DatePageParams,
@@ -16,7 +16,7 @@ export type RelevantPostsPageParams = {
 }
 
 /** Get posts from the main feed of a user. */
-export async function getRelevantPosts({ user, pageParams, offset, postId }: { user: ClientUser, pageParams?: RelevantPostsPageParams, offset: number, postId: string }) {
+export async function getRelevantPosts({ user, pageParams, offset, postId }: { user: User, pageParams?: RelevantPostsPageParams, offset: number, postId: string }) {
     // Select the main post
     const [post] = await db.select().from(posts).where(eq(posts.id, postId))
     if (!post)

@@ -1,8 +1,8 @@
 import { aliasedTable, eq } from "drizzle-orm";
-import { db } from "../..";
-import { postReplyCounterRedis } from "../../../redis/counters/replyCount";
-import { redisClient } from "../../../redis/connect";
-import { posts } from "../../schema/posts";
+import { db } from "../../../..";
+import { redisClient } from "../../../../../redis/connect";
+import { posts } from "../../../../schema/posts";
+import { postContentRedisKey } from "../../../../../redis/postContent/read";
 
 export const postsToUpdate = aliasedTable(posts, "selected_posts")
 
@@ -18,5 +18,5 @@ export async function updateReplyCount(postId: string) {
         .returning({ replyCount: postsToUpdate.replyCount })
     if (!updated) return
     // Update the counter in Redis
-    await redisClient.set(postReplyCounterRedis(postId), updated.replyCount)
+    await redisClient.hSet(postContentRedisKey(postId), "replyCount", updated.replyCount.toString())
 }

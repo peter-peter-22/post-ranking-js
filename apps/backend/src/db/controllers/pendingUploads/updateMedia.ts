@@ -2,8 +2,8 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../..";
 import { HttpError } from "../../../middlewares/errorHandler";
 import { minioClient } from "../../../objectStorage/client";
-import { MediaFile } from "../../common"
 import { pendingUploads } from "../../schema/pendingUploads";
+import { ServerMedia } from "@me/schemas/src/zod/media";
 
 /** Check if the bucket names of the files are equal and return the bucket name. */
 export function getBucketName(media: { bucketName: string }[]) {
@@ -15,21 +15,21 @@ export function getBucketName(media: { bucketName: string }[]) {
     return bucketName
 }
 
-function mediaEqual(a: MediaFile, b: MediaFile) {
+function mediaEqual(a: ServerMedia, b: ServerMedia) {
     return a.objectName === b.objectName && a.bucketName === b.bucketName
 }
 
-function mediaVersionEqual(a: MediaFile, b: MediaFile) {
+function mediaVersionEqual(a: ServerMedia, b: ServerMedia) {
     return a.lastModified === b.lastModified
 }
 
 /** Finalize the new uploads and delete the removed ones. */
-export async function updateMedia(oldMedia: MediaFile[], newMedia: MediaFile[]) {
-    const newUploads: MediaFile[] = newMedia.filter(newFile => {
+export async function updateMedia(oldMedia: ServerMedia[], newMedia: ServerMedia[]) {
+    const newUploads: ServerMedia[] = newMedia.filter(newFile => {
         // Check the version only on the new uploads. This is to finalize the replaced files.
         return !oldMedia.some(oldFile => mediaEqual(oldFile, newFile) && mediaVersionEqual(oldFile, newFile))
     })
-    const deletedFiles: MediaFile[] = oldMedia.filter(oldFile => {
+    const deletedFiles: ServerMedia[] = oldMedia.filter(oldFile => {
         return !newMedia.some(newFile => mediaEqual(newFile, oldFile))
     })
     await deleteMedia(deletedFiles)
@@ -37,7 +37,7 @@ export async function updateMedia(oldMedia: MediaFile[], newMedia: MediaFile[]) 
 }
 
 /** Delete the selected files from the object storage */
-export async function deleteMedia(deletedFiles: MediaFile[]) {
+export async function deleteMedia(deletedFiles: ServerMedia[]) {
     if (deletedFiles.length === 0) return
     console.log(`Deleting ${deletedFiles.length} files`)
     const bucketName = getBucketName(deletedFiles)
@@ -46,7 +46,7 @@ export async function deleteMedia(deletedFiles: MediaFile[]) {
 }
 
 /** Finalize the provided uploads */
-export async function addMedia(newUploads: MediaFile[]) {
+export async function addMedia(newUploads: ServerMedia[]) {
     if (newUploads.length === 0) return
     console.log(`Adding ${newUploads.length} files`)
     const bucketName = getBucketName(newUploads)

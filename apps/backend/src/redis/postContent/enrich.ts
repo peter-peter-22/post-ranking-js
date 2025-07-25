@@ -14,9 +14,9 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
     // Fetch
     const [users, likes, views, clicks] = await Promise.all([
         enrichUsers([...userIds], viewerId),
-        viewerId ? cachedLikes.read(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedViews.read(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedClicks.read(postIds, viewerId, posts) : undefined
+        viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
+        viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
+        viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined
     ])
     // Aggregate
     const enrichedPosts: PersonalPost[] = [...posts.values()].map(post => {

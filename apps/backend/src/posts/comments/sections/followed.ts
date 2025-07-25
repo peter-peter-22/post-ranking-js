@@ -2,7 +2,7 @@ import { and, desc, eq, not } from "drizzle-orm";
 import { db } from "../../../db";
 import { follows } from "../../../db/schema/follows";
 import { Post, posts } from "../../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
+import { User } from "../../../db/schema/users";
 import { candidateColumns } from "../../common";
 import { personalizePosts } from "../../hydratePosts";
 import { replyCommonFilters } from "../getReplies";
@@ -13,7 +13,7 @@ export async function getFollowedComments({
     firstPage,
     post
 }: {
-    user: ClientUser,
+    user: User,
     firstPage: boolean,
     post: Post
 }) {

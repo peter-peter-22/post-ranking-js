@@ -1,10 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../..";
-import { userFollowingCountRedis } from "../../../../redis/counters/followingCount";
 import { redisClient } from "../../../../redis/connect";
+import { userContentRedisKey } from "../../../../redis/users/read";
 import { follows } from "../../../schema/follows";
 import { users } from "../../../schema/users";
-import { userFollowerCountRedis } from "../../../../redis/counters/followerCount";
 
 /**Recalculate the follower count of a user. */
 export async function updateFollowerCount(userId: string) {
@@ -18,7 +17,7 @@ export async function updateFollowerCount(userId: string) {
         .returning({ followerCount: users.followerCount })
     if (!updated) return
     // Update the counter in Redis
-    await redisClient.set(userFollowerCountRedis(userId), updated.followerCount)
+    await redisClient.hSet(userContentRedisKey(userId), "followerCount", updated.followerCount)
 }
 
 /**Recalculate the following count of a user. */
@@ -33,7 +32,7 @@ export async function updateFollowingCount(userId: string) {
         .returning({ followingCount: users.followingCount })
     if (!updated) return
     // Update the counter in Redis
-    await redisClient.set(userFollowingCountRedis(userId), updated.followingCount)
+    await redisClient.hSet(userContentRedisKey(userId), "followingCount", updated.followingCount)
 }
 
 /** Update all follower and following counts. */

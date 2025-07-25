@@ -1,13 +1,10 @@
-import { incrementRedisCounter } from "../../jobs/common";
-import { standardJobs } from "../../jobs/queue";
-
-export function userFollowerCountRedis(userId: string) {
-    return`user:${userId}:counters:follower`
-}
+import { redisClient } from "../connect";
+import { standardJobs } from "../jobs/queue";
+import { userContentRedisKey } from "../users/read";
 
 export async function incrementFollowerCounter(userId: string, add: number) {
     await Promise.all([
-        incrementRedisCounter(userFollowerCountRedis(userId), add),
-        standardJobs.addJob("followerCount", userId)
+        redisClient.hIncrBy(userContentRedisKey(userId), "followerCount", add),
+        standardJobs.addJob({ category: "followerCount", data: userId, key: userId })
     ])
 }

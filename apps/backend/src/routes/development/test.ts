@@ -5,10 +5,10 @@ import { db } from '../../db';
 import { posts } from '../../db/schema/posts';
 import { users } from '../../db/schema/users';
 import { enrichPosts } from '../../redis/postContent/enrich';
-import { cachedPosts } from '../../redis/postContent/read';
 import { enrichUsers } from '../../redis/users/enrich';
 import { cachedUsers } from '../../redis/users/read';
 import { removeUndefinedMapValues } from '../../utilities/arrays/removeUndefinedMapValues';
+import { cachedPosts } from '../../redis/postContent/read';
 
 const router = Router();
 

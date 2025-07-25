@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../../..";
-import { postViewCounterRedis } from "../../../../../redis/counters/viewCount";
 import { redisClient } from "../../../../../redis/connect";
 import { posts } from "../../../../schema/posts";
 import { views } from "../../../../schema/views";
+import { postContentRedisKey } from "../../../../../redis/postContent/read";
 
 /**Recalculate the view count of a post. */
 export async function updateViewCounts(postId: string) {
@@ -17,5 +17,5 @@ export async function updateViewCounts(postId: string) {
         .returning({ viewCount: posts.viewCount })
     if (!updated) return
     // Update the counter in Redis
-    await redisClient.set(postViewCounterRedis(postId), updated.viewCount)
+    await redisClient.hSet(postContentRedisKey(postId), "viewCount", updated.viewCount.toString())
 }

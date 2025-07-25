@@ -1,20 +1,18 @@
 import { sql } from "drizzle-orm";
 import { Router } from "express";
+import { isArray } from "mathjs";
 import { z } from "zod";
 import { authRequestStrict } from "../../authentication";
 import { db } from "../../db";
 import { getNotificationCount } from "../../db/controllers/notifications/getCount";
 import { clicks } from "../../db/schema/clicks";
 import { views } from "../../db/schema/views";
-import { postClickCounterRedis } from "../../redis/counters/clickCount";
-import { defaultDelay } from "../../jobs/common";
-import { scheduleEngagementHistoryUpdate } from "../../jobs/engagementHistory";
-import { postReplyCounterRedis } from "../../redis/counters/replyCount";
-import { standardJobs } from "../../jobs/queue";
-import { postViewCounterRedis } from "../../redis/counters/viewCount";
 import { redisClient } from "../../redis/connect";
+import { defaultDelay } from "../../redis/jobs/common";
+import { scheduleEngagementHistoryUpdate } from "../../redis/jobs/engagementHistory";
+import { standardJobs } from "../../redis/jobs/queue";
 import { selectTargetPosts } from "../../userActions/posts/common";
-import { postLikeCounterRedis } from "../../redis/counters/likeCount";
+import { postContentRedisKey } from "../../redis/postContent/read";
 
 const router = Router();
 
@@ -27,7 +25,7 @@ const RegularUpdateSchema = z.object({
 router.post('/', async (req, res) => {
     const user = await authRequestStrict(req)
     const { viewedPosts, clickedPosts, visiblePosts } = RegularUpdateSchema.parse(req.body);
-    const [engagementCounts,notificationCount] = await Promise.all([
+    const [engagementCounts, notificationCount] = await Promise.all([
         handleVisiblePosts(visiblePosts),
         getNotificationCount(user.id),
         handleViews(user.id, viewedPosts),
@@ -35,7 +33,7 @@ router.post('/', async (req, res) => {
     ])
     res.json({
         engagementCounts,
-        notificationCount 
+        notificationCount
     })
 })
 
@@ -52,20 +50,18 @@ async function handleVisiblePosts(visiblePosts: string[]) {
     // Get the engagement counts of each post
     const tx = redisClient.multi()
     for (const postId of visiblePosts) {
-        tx.get(postLikeCounterRedis(postId))
-        tx.get(postClickCounterRedis(postId))
-        tx.get(postReplyCounterRedis(postId))
-        tx.get(postViewCounterRedis(postId))
+        tx.hmGet(postContentRedisKey(postId), ["likeCount", "clickCount", "replyCount", "viewCount"])
     }
     const results = await tx.exec()
     // Format the results
     const parsed: RealtimeEngagements[] = []
     for (let i = 0; i < visiblePosts.length; i++) {
-        const redisIndex = i * 4
-        const likes = results[redisIndex]
-        const clicks = results[redisIndex + 1]
-        const replies = results[redisIndex + 2]
-        const views = results[redisIndex + 3]
+        const result = results[i]
+        if (!result || !isArray(result)) continue
+        const likes = result[0]
+        const clicks = result[1]
+        const replies = result[2]
+        const views = result[3]
         const engagements: RealtimeEngagements = { postId: visiblePosts[i] }
         if (likes) engagements.likes = parseInt(likes.toString())
         if (clicks) engagements.clicks = parseInt(clicks.toString())
@@ -96,7 +92,7 @@ async function handleViews(userId: string, viewedPosts: string[]) {
     // Increase the counters in redis
     const tx = redisClient.multi()
     createdViews.forEach(view => {
-        tx.incr(postViewCounterRedis(view.postId))
+        tx.hIncrBy(postContentRedisKey(view.postId), "viewCount", 1)
     });
     // Create jobs to update the view counts in the database
     const jobsPromise = standardJobs.addJobs(createdViews.map(view => ({
@@ -128,7 +124,7 @@ async function handleClicks(userId: string, clickedPosts: string[]) {
     // Increase the counters in redis
     const tx = redisClient.multi()
     createdClicks.forEach(click => {
-        tx.incr(postClickCounterRedis(click.postId))
+        tx.hIncrBy(postContentRedisKey(click.postId), "clickCount", 1)
     });
     // Create jobs to update the click counts in the database
     const jobsPromise = standardJobs.addJobs(createdClicks.map(click => ({
