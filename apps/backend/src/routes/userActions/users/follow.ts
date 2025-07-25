@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { authRequestStrict } from '../../../authentication';
-import { follow, unfollow } from '../../../userActions/follow';
+import { setCachedFollow } from '../../../redis/users/follows';
 
 const router = Router();
 
@@ -15,7 +15,7 @@ router.post('/create', async (req: Request, res: Response) => {
     // Authenticate
     const user = await authRequestStrict(req);
     // Create follow
-    await follow(user.id, followedId)
+    await setCachedFollow(user.id, followedId, true)
     res.sendStatus(200)
 });
 
@@ -25,7 +25,7 @@ router.post('/remove', async (req: Request, res: Response) => {
     // Authenticate
     const user = await authRequestStrict(req);
     // Create follow
-    await unfollow(user.id, followedId)
+    await setCachedFollow(user.id, followedId, false)
     res.sendStatus(200)
 });
 

@@ -1,12 +1,15 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { db } from "../../db"
-import { follows } from "../../db/schema/follows"
+import { Follow, follows } from "../../db/schema/follows"
 import { followSetTTL } from "../common"
 import { redisClient } from "../connect"
 import { createPersistentSet } from "../persistentSet"
+import { userContentRedisKey } from "./read"
+import { standardJobs } from "../jobs/queue"
+import { createFollowNotification } from "../../db/controllers/notifications/createNotification"
 
 function userFollowListRedisKey(id: string) {
-    return `user:${id}:follows`
+    return `user:${id}:following`
 }
 
 export async function cachedFollowStatus(userId: string, targetUserIds: string[]) {
@@ -40,4 +43,38 @@ export async function cachedFollowStatus(userId: string, targetUserIds: string[]
         .expire(key, followSetTTL)
         .exec()
     return new Set<string>(ids)
+}
+
+export async function setCachedFollow(followerId: string, followedId: string, value: boolean) {
+    const [updated] = value ? (
+        await db.insert(follows)
+            .values({
+                followedId,
+                followerId
+            })
+            .onConflictDoNothing()
+            .returning()
+    ) : (
+        await db.delete(follows)
+            .where(and(
+                eq(follows.followerId, followerId),
+                eq(follows.followedId, followedId)
+            ))
+            .returning()
+    )
+    if (updated) await handleFollowChange(updated,value)
+}
+
+async function handleFollowChange(updated: Follow, value: boolean) {
+    const add = value ? 1 : -1
+    await Promise.all([
+        redisClient.multi()
+            .hIncrBy(userContentRedisKey(updated.followedId), "followerCount", add)
+            .hIncrBy(userContentRedisKey(updated.followerId), "followingCount", add),
+        standardJobs.addJobs([
+            { category: "followingCount", data: updated.followerId, key: updated.followerId },
+            { category: "followerCount", data: updated.followedId, key: updated.followedId }
+        ]),
+        createFollowNotification(updated.followedId, updated.createdAt)
+    ])
 }
