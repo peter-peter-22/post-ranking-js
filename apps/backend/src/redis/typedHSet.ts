@@ -75,3 +75,6 @@ export function typedHSet<T extends HSetValue>(schema: HSetSchema) {
 
     return { serialize, deserialize }
 }
+
+export type TypedHSetHandler<TData extends HSetValue>=ReturnType<typeof typedHSet<TData>>
+

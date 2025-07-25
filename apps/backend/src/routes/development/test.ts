@@ -8,13 +8,13 @@ import { enrichPosts } from '../../redis/postContent/enrich';
 import { enrichUsers } from '../../redis/users/enrich';
 import { cachedUsers } from '../../redis/users/read';
 import { removeUndefinedMapValues } from '../../utilities/arrays/removeUndefinedMapValues';
-import { cachedPosts } from '../../redis/postContent/read';
+import { cachedPostRead } from '../../redis/postContent/read';
 
 const router = Router();
 
 router.get('/readPosts', async (req: Request, res: Response) => {
     const testIds = await db.select({ id: posts.id }).from(posts).orderBy(desc(posts.createdAt)).limit(10)
-    const data = await cachedPosts.read(testIds.map(t => t.id))
+    const data = await cachedPostRead.read(testIds.map(t => t.id))
     res.json({ data: [...data] })
 });
 
@@ -27,7 +27,7 @@ router.get('/readUsers', async (req: Request, res: Response) => {
 router.get('/readEnrichedPosts', async (req: Request, res: Response) => {
     const testIds = await db.select({ id: posts.id }).from(posts).orderBy(desc(posts.createdAt)).limit(10)
     const user = await authRequestStrict(req)
-    const myPosts = removeUndefinedMapValues(await cachedPosts.read(testIds.map(t => t.id)))
+    const myPosts = removeUndefinedMapValues(await cachedPostRead.read(testIds.map(t => t.id)))
     const enrichedPosts = await enrichPosts(
         myPosts,
         user.id

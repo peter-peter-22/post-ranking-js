@@ -1,5 +1,5 @@
 import { redisClient } from "./connect";
-import { HSetSchema, HSetValue, typedHSet } from "./typedHSet";
+import { HSetValue, TypedHSetHandler } from "./typedHSet";
 
 export function cachedBulkHSetRead<T extends HSetValue>({
     schema,
@@ -8,14 +8,12 @@ export function cachedBulkHSetRead<T extends HSetValue>({
     fallback,
     getId
 }: {
-    schema: HSetSchema,
+    schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
     getId: (value: T) => string,
     getTTL: (data: T) => number
     fallback: (ids: string[]) => Promise<T[]>
 }) {
-    const mySchema = typedHSet<T>(schema)
-
     const fetch = async (ids: string[]) => {
         if (ids.length === 0) return new Map<string, T | undefined>()
         // Try to read from redis
@@ -33,7 +31,7 @@ export function cachedBulkHSetRead<T extends HSetValue>({
                     (!result || Object.keys(result).length === 0) ? (
                         undefined
                     ) : (
-                        mySchema.deserialize(result)
+                        schema.deserialize(result)
                     )
                 ])
             })
@@ -53,7 +51,7 @@ export function cachedBulkHSetRead<T extends HSetValue>({
                 const key = getKey(id)
                 multi.hSet(
                     key,
-                    mySchema.serialize(row)
+                    schema.serialize(row)
                 )
             })
             await multi.exec()
@@ -68,13 +66,27 @@ export function cachedBulkHSetRead<T extends HSetValue>({
         return resultMap
     }
 
+    return { read: fetch }
+}
+
+export  function cachedBulkHSetWrite<T extends HSetValue>({
+    schema,
+    getKey,
+    getTTL
+}: {
+    schema: TypedHSetHandler<T>,
+    getKey: (id: string) => string,
+    getTTL: (data: T) => number
+}) {
+
     const write = async (data: T[]) => {
         const multi = redisClient.multi()
         for (const el of data) {
-            multi.hSet(getKey(el.id), mySchema.serialize(el))
+            multi.hSet(getKey(el.id), schema.serialize(el))
+            multi.expire(getKey(el.id), getTTL(el))
         }
         await multi.exec()
     }
 
-    return { read: fetch, schema: mySchema,write }
+    return { write }
 }

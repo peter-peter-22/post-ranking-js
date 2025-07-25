@@ -1,6 +1,7 @@
 import { Post } from "../../db/schema/posts";
 import { PersonalPost } from "../../posts/hydratePosts";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
+import { cachedEngagementHistoryRead } from "../users/engagementHistory";
 import { enrichUsers } from "../users/enrich";
 
 export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
@@ -16,7 +17,8 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
         enrichUsers([...userIds], viewerId),
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined
+        viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined,
+        viewerId ? cachedEngagementHistoryRead(viewerId, [...userIds]) : undefined
     ])
     // Aggregate
     const enrichedPosts: PersonalPost[] = [...posts.values()].map(post => {
