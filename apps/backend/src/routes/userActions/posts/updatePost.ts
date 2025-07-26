@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { authRequestStrict } from '../../../authentication';
 import { db } from '../../../db';
 import { updateMedia } from '../../../db/controllers/pendingUploads/updateMedia';
-import {  posts } from '../../../db/schema/posts';
+import { posts } from '../../../db/schema/posts';
 import { HttpError } from '../../../middlewares/errorHandler';
 import { personalizePosts } from '../../../posts/hydratePosts';
 import { prepareAnyPost } from '../../../userActions/posts/preparePost';
 import { getOnePost } from '../../getPost';
 import { createPostSchema } from './createPost';
+import { cachedPostWrite } from '../../../redis/postContent/read';
 
 const router = Router();
 
@@ -45,6 +46,8 @@ router.post('/', async (req: Request, res: Response) => {
         .set({ ...valuesToUpdate, pending: false })
         .where(eq(posts.id, post.id))
         .returning()
+    // Update cache
+    await cachedPostWrite.write([updatedPost])
     // Format the post to the standard format
     const [personalPost] = await personalizePosts(getOnePost(updatedPost.id), user)
     // Return updated posts
