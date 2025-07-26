@@ -13,7 +13,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
         userIds.add(post.userId)
     }
     // Fetch
-    const [users, likes, views, clicks] = await Promise.all([
+    const [users, likes, views, clicks, engagementHistories] = await Promise.all([
         enrichUsers([...userIds], viewerId),
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
@@ -24,7 +24,8 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
     const enrichedPosts: PersonalPost[] = [...posts.values()].map(post => {
         const liked = likes?.get(post.id) || false;
         const viewed = views?.get(post.id) || false;
-        const clicked = clicks?.get(post.id) || false
+        const clicked = clicks?.get(post.id) || false;
+        const engagementHistory = engagementHistories?.get(post.userId) || null
         const user = users.get(post.userId)
         if (!user) throw new Error("Missing user")
         return {
@@ -38,7 +39,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
             views: post.viewCount,
             engagementCount: post.engagementCount,
             similarity: 0,
-            engagementHistory: null,
+            engagementHistory: engagementHistory,
             repliedByFollowed: false,
             liked: liked,
             viewed: viewed,

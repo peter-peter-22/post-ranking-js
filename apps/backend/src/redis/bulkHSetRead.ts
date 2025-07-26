@@ -6,13 +6,15 @@ export function cachedBulkHSetRead<T extends HSetValue>({
     getKey,
     getTTL,
     fallback,
-    getId
+    getId,
+    defaultValue
 }: {
     schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
     getId: (value: T) => string,
     getTTL: (data: T) => number
-    fallback: (ids: string[]) => Promise<T[]>
+    fallback: (ids: string[]) => Promise<T[]>,
+    defaultValue?: T
 }) {
     const fetch = async (ids: string[]) => {
         if (ids.length === 0) return new Map<string, T | undefined>()
@@ -42,18 +44,25 @@ export function cachedBulkHSetRead<T extends HSetValue>({
         if (missingIds.length > 0) {
             // Fetch the missing values from the db
             const newData = await fallback(missingIds)
+            const dataMap = new Map<string, T>(newData.map(row => [getId(row), row]))
             const multi = redisClient.multi()
-            newData.forEach(row => {
-                const id = getId(row)
+            for (const id of missingIds) {
+                // Get the data of the missing id
+                // The default value must be used if the database does not necessarily contains all requested values to avoid further fallbacks
+                const data = dataMap.get(id) || defaultValue
+                if (!data) {
+                    console.warn(`Missing data without fallback value at ${getKey(id)}`)
+                    continue
+                }
                 // Add to the results
-                resultMap.set(id, row)
+                resultMap.set(id, data)
                 // Add to the cache
                 const key = getKey(id)
                 multi.hSet(
                     key,
-                    schema.serialize(row)
+                    schema.serialize(data)
                 )
-            })
+            }
             await multi.exec()
         }
         // Update expiration
@@ -69,14 +78,14 @@ export function cachedBulkHSetRead<T extends HSetValue>({
     return { read: fetch }
 }
 
-export  function cachedBulkHSetWrite<T extends HSetValue>({
+export function cachedBulkHSetWrite<T extends HSetValue>({
     schema,
     getKey,
     getTTL
 }: {
     schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
-    getTTL: (data: T) => number
+    getTTL: (data: T) => number,
 }) {
 
     const write = async (data: T[]) => {
