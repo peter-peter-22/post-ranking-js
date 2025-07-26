@@ -2,7 +2,7 @@ import { PersonalUser } from "../../db/controllers/users/getUser";
 import { cachedFollowStatus } from "./follows";
 import { cachedUsers } from "./read";
 
-export async function enrichUsers(ids: string[], viewerId?: string) {
+export async function getEnrichedUsers(ids: string[], viewerId?: string) {
     // Get
     const [users, follows] = await Promise.all([
         cachedUsers.read(ids),

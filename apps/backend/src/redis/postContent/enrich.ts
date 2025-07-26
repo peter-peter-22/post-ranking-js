@@ -1,10 +1,14 @@
 import { Post } from "../../db/schema/posts";
+import { User } from "../../db/schema/users";
 import { PersonalPost } from "../../posts/hydratePosts";
+import { cosineSimilarity } from "../../utilities/arrays/cosineSimilarity";
+import { removeUndefinedMapValues } from "../../utilities/arrays/removeUndefinedMapValues";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
 import { cachedEngagementHistoryRead } from "../users/engagementHistory";
-import { enrichUsers } from "../users/enrich";
+import { getEnrichedUsers } from "../users/enrich";
+import { cachedPostRead } from "./read";
 
-export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
+export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
     // Format 
     const postIds: string[] = []
     const userIds: Set<string> = new Set()
@@ -12,9 +16,10 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
         postIds.push(post.id)
         userIds.add(post.userId)
     }
+    const viewerId = viewer?.id
     // Fetch
     const [users, likes, views, clicks, engagementHistories] = await Promise.all([
-        enrichUsers([...userIds], viewerId),
+        getEnrichedUsers([...userIds], viewerId),
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined,
@@ -38,7 +43,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
             clicks: post.clickCount,
             views: post.viewCount,
             engagementCount: post.engagementCount,
-            similarity: 0,
+            similarity: viewer && viewer.embedding && post.embedding ? cosineSimilarity(post.embedding, viewer.embedding) : 0,
             engagementHistory: engagementHistory,
             repliedByFollowed: false,
             liked: liked,
@@ -57,4 +62,13 @@ export async function enrichPosts(posts: Map<string, Post>, viewerId?: string) {
         }
     })
     return enrichedPosts
+}
+
+export async function getEnrichedPosts(ids: string[], viewer?: User) {
+    return await enrichPosts(
+        removeUndefinedMapValues(
+            await cachedPostRead.read(ids)
+        ),
+        viewer
+    )
 }
