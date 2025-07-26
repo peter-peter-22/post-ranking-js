@@ -4,6 +4,8 @@ import { engagementHistory, EngagementHistory } from "../../db/schema/engagement
 import { cachedBulkHSetRead, cachedBulkHSetWrite } from "../bulkHSetRead";
 import { userEngagementHistoryTTL } from "../common";
 import { typedHSet } from "../typedHSet";
+import { redisClient } from "../connect";
+import { scheduleEngagementHistoryUpdate } from "../jobs/engagementHistory";
 
 function userEngagementHistoryRedisKey(viewerId: string, posterId: string) {
     return `user:${viewerId}:engagementHistory:${posterId}`;
@@ -42,4 +44,21 @@ export const cachedEngagementHistoryWrite = async (viewerId: string, values: Eng
         getTTL: getTTL
     })
         .write(values)
-} 
+}
+
+export const updateEngagementHistory = async (viewerId: string, updates: { posterId: string, addLikes?: number, addClicks?: number, addReplies?: number }[]) => {
+    // Ensure the cache is loaded before the increment happens
+    await cachedEngagementHistoryRead(viewerId, updates.map(e => e.posterId))
+    // Increment
+    const multi = redisClient.multi()
+    for (const { posterId, addLikes, addClicks, addReplies } of updates) {
+        if (addLikes) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, posterId), "likes", addLikes)
+        if (addClicks) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, posterId), "clicks", addClicks)
+        if (addReplies) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, posterId), "clicks", addReplies)
+    }
+    await multi.exec()
+    // Shedule update job
+    await scheduleEngagementHistoryUpdate(viewerId)
+    // Write snapshot
+    // TODO
+}

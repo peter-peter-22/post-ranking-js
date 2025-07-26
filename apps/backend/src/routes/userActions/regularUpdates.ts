@@ -9,10 +9,10 @@ import { clicks } from "../../db/schema/clicks";
 import { views } from "../../db/schema/views";
 import { redisClient } from "../../redis/connect";
 import { defaultDelay } from "../../redis/jobs/common";
-import { scheduleEngagementHistoryUpdate } from "../../redis/jobs/engagementHistory";
 import { standardJobs } from "../../redis/jobs/queue";
-import { selectTargetPosts } from "../../userActions/posts/common";
 import { postContentRedisKey } from "../../redis/postContent/read";
+import { updateEngagementHistory } from "../../redis/users/engagementHistory";
+import { selectTargetPosts } from "../../userActions/posts/common";
 
 const router = Router();
 
@@ -133,9 +133,9 @@ async function handleClicks(userId: string, clickedPosts: string[]) {
         delay: defaultDelay
     })))
     // Update engagement history
-    const engagementHistoryJobPromise = scheduleEngagementHistoryUpdate(userId)
+    const historyPromise = updateEngagementHistory(userId, createdClicks.map(click => ({ posterId: click.posterId, addClicks: 1 })))
     // Execute the promises
-    await Promise.all([jobsPromise, tx.exec(), engagementHistoryJobPromise])
+    await Promise.all([jobsPromise, tx.exec(), historyPromise])
 }
 
 export default router

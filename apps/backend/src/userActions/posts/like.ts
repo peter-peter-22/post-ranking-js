@@ -2,11 +2,12 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { createLikeNotification } from "../../db/controllers/notifications/createNotification";
 import { likes } from "../../db/schema/likes";
-import { defaultDelay, longDelay } from "../../redis/jobs/common";
-import { standardJobs } from "../../redis/jobs/queue";
 import { redisClient } from "../../redis/connect";
-import { selectTargetPost } from "./common";
+import { defaultDelay } from "../../redis/jobs/common";
+import { standardJobs } from "../../redis/jobs/queue";
 import { postContentRedisKey } from "../../redis/postContent/read";
+import { updateEngagementHistory } from "../../redis/users/engagementHistory";
+import { selectTargetPost } from "./common";
 
 export async function likePost(postId: string, userId: string, value: boolean) {
     // Handle changes in the DB
@@ -15,16 +16,18 @@ export async function likePost(postId: string, userId: string, value: boolean) {
     ) : (
         await deleteLike(postId, userId)
     )
+    const add = value ? 1 : -1
     if (updated) {
         // Update redis
         await Promise.all([
             // Schedule jobs to update counters
             standardJobs.addJobs([
                 { category: "likeCount", data: postId, key: postId, delay: defaultDelay },
-                { category: "userEngagementHistory", data: userId, delay: longDelay }
             ]),
             // Increment counter
-            redisClient.hIncrBy(postContentRedisKey(postId), "likeCount", value ? 1 : -1),
+            redisClient.hIncrBy(postContentRedisKey(postId), "likeCount", add),
+            // Update engagement history
+            updateEngagementHistory(userId, [{ posterId: updated.posterId, addLikes: add }]),
             // Create notification if needed
             value === true && updated.posterId !== userId ? createLikeNotification(updated.posterId, updated.postId, updated.createdAt) : undefined
         ])
