@@ -8,7 +8,7 @@ import { getNotificationCount } from "../../db/controllers/notifications/getCoun
 import { clicks } from "../../db/schema/clicks";
 import { views } from "../../db/schema/views";
 import { redisClient } from "../../redis/connect";
-import { defaultDelay } from "../../redis/jobs/common";
+import { standardDelay } from "../../redis/jobs/common";
 import { standardJobs } from "../../redis/jobs/queue";
 import { postContentRedisKey } from "../../redis/postContent/read";
 import { updateEngagementHistory } from "../../redis/users/engagementHistory";
@@ -98,7 +98,7 @@ async function handleViews(userId: string, viewedPosts: string[]) {
     const jobsPromise = standardJobs.addJobs(createdViews.map(view => ({
         category: "viewCount",
         data: view.postId,
-        delay: defaultDelay
+        delay: standardDelay
     })))
     // Execute the promises
     await Promise.all([jobsPromise, tx.exec()])
@@ -130,7 +130,7 @@ async function handleClicks(userId: string, clickedPosts: string[]) {
     const jobsPromise = standardJobs.addJobs(createdClicks.map(click => ({
         category: "clickCount",
         data: click.postId,
-        delay: defaultDelay
+        delay: standardDelay
     })))
     // Update engagement history
     const historyPromise = updateEngagementHistory(userId, createdClicks.map(click => ({ posterId: click.posterId, addClicks: 1 })))

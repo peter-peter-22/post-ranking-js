@@ -5,6 +5,7 @@ import { clicks } from "../../schema/clicks";
 import { engagementHistory } from "../../schema/engagementHistory";
 import { likes } from "../../schema/likes";
 import { posts } from "../../schema/posts";
+import { createEngagementHistorySnapshots } from "./snapshot";
 
 /** Filter out the engagements those are older than 30 days
  * @param column The date column.
@@ -86,5 +87,7 @@ export async function recalculateUserEngagementHistory(userId: string) {
         await tx
             .insert(engagementHistory)
             .select(engagementsPerUser)
+        // Create snapshot
+        await createEngagementHistorySnapshots(userId)
     })
 }

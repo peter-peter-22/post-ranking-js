@@ -1,4 +1,4 @@
-import { defaultDelay } from "./common";
+import { standardDelay } from "./common";
 import { jobCategory, JobCategoryData, JobCategoryOptions } from "./queue";
 
 /** Job where the data is a single string value. */

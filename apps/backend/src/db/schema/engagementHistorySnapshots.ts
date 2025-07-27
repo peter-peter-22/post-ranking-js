@@ -4,15 +4,15 @@ import { users } from './users';
 
 /** Snapshots of the engagement histories. */
 export const engagementHistorySnapshots = pgTable('engagement_history_snapshots', {
+    likes: integer().notNull().default(0),
+    replies: integer().notNull().default(0),
+    clicks: integer().notNull().default(0),
     viewerId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
-    posterId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
-    likeCount: integer().notNull().default(0),
-    replyCount: integer().notNull().default(0),
-    clickCount: integer().notNull().default(0),
+    publisherId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp().notNull().defaultNow(),
 }, (t) => [
-    primaryKey({ columns: [t.viewerId, t.posterId] }),
-    index().on(t.viewerId, t.posterId, t.createdAt.desc())
+    primaryKey({ columns: [t.viewerId, t.publisherId] }),
+    index().on(t.viewerId, t.publisherId, t.createdAt.desc())
 ]);
 
 export type EngagementHistoryShapshot = InferSelectModel<typeof engagementHistorySnapshots>;
