@@ -5,6 +5,7 @@ import { authRequestStrict } from '../../../authentication';
 import { db } from '../../../db';
 import { updateMedia } from '../../../db/controllers/pendingUploads/updateMedia';
 import { userColumns, users } from '../../../db/schema/users';
+import { cachedUsersWrite } from '../../../redis/users/read';
 
 const router = Router();
 
@@ -24,6 +25,15 @@ router.post('/', async (req: Request, res: Response) => {
         .set(newUser)
         .where(eq(users.id, user.id))
         .returning(userColumns)
+    // Update cache
+    await cachedUsersWrite.write([{
+        ...user,
+        name: newUser.name,
+        handle: newUser.handle,
+        bio: newUser.bio,
+        avatar: newUser.profileMedia ? newUser.profileMedia : null,
+        banner: newUser.bannerMedia ? newUser.bannerMedia : null
+    }])
     // Return updated user
     res.status(201).json({ user: updatedUser } as UpdateUserResponse)
 });
