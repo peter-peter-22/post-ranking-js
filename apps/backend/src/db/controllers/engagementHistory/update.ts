@@ -17,7 +17,7 @@ export const recencyFilter = (column: PgColumn): SQL => {
     return gt(column, maxAgeDate)
 }
 
-export async function updateUserEngagementHistory(userId: string) {
+export async function recalculateUserEngagementHistory(userId: string) {
     const likesPerUser = db
         .select({
             posterId: likes.posterId,

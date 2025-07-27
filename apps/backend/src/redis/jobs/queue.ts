@@ -1,11 +1,5 @@
 import { ConnectionOptions, Job, JobsOptions, Queue, Worker } from 'bullmq';
 import { env } from 'process';
-import { updateUserEngagementHistory } from '../../db/controllers/engagementHistory/update';
-import { updateReplyCount } from '../../db/controllers/posts/engagement/reply/count';
-import { updateClickCount } from '../../db/controllers/posts/engagement/clicks/count';
-import { updateLikeCount } from '../../db/controllers/posts/engagement/like/count';
-import { updateViewCounts } from '../../db/controllers/posts/engagement/views/count';
-import { updateFollowerCount, updateFollowingCount } from '../../db/controllers/users/follow/count';
 
 /** Redis client config for job queue. */
 const redisJobsConnection: ConnectionOptions = {
@@ -14,7 +8,7 @@ const redisJobsConnection: ConnectionOptions = {
 }
 
 /** Job queue shared by updates those require a single id. */
-export const queue = new Queue('updateQueue', {
+export const jobQueue = new Queue('main', {
     connection: redisJobsConnection,
     defaultJobOptions: {
         attempts: 3,
@@ -27,8 +21,8 @@ export const queue = new Queue('updateQueue', {
     }
 });
 
-export const worker = new Worker(
-    'updateQueue',
+const worker = new Worker(
+    'main',
     processUpdateJob,
     {
         connection: redisJobsConnection,
@@ -52,69 +46,67 @@ worker.on('error', err => {
     console.error('Worker error:', err);
 });
 
+const jobCategories: Map<string, (data: any) => Promise<void>> = new Map()
+
 async function processUpdateJob(job: Job): Promise<void> {
     console.log(`Processing update job. Type: ${job.name} Data: ${job.data} Id: ${job.id}`)
-    switch (job.name as StandardJobName) {
-        case "likeCount":
-            await standardJobs.processJob(job.data, updateLikeCount)
-            break;
-        case "replyCount":
-            await standardJobs.processJob(job.data, updateReplyCount)
-            break;
-        case "viewCount":
-            await standardJobs.processJob(job.data, updateViewCounts)
-            break;
-        case "clickCount":
-            await standardJobs.processJob(job.data, updateClickCount)
-            break;
-        case "followerCount":
-            await standardJobs.processJob(job.data, updateFollowerCount)
-            break;
-        case "followingCount":
-            await standardJobs.processJob(job.data, updateFollowingCount)
-            break;
-        case "userEngagementHistory":
-            await standardJobs.processJob(job.data, updateUserEngagementHistory)
-            break;
-        default:
-            throw new Error(`Invalid update job type ${job.name}`)
-    }
+    const handler = jobCategories.get(job.name)
+    if (!handler) throw new Error(`No handler for job ${job.name}`)
+    await handler(job.data)
 }
 
-export type JobData<TName, TData> = { category: TName, data: TData, delay?: number, key?: string }
+export type JobCategoryData<TData> = { data: TData, delay?: number, options?: JobsOptions, key?: string }
 
-function jobCategory<TData, TName extends string>() {
-    async function addJob(job: JobData<TName, TData>, options?: JobsOptions) {
-        return await addJobs([job], options)
+export type JobCategoryOptions<TData> = {
+    name: string,
+    handler: (data: TData) => Promise<void>,
+    serializeData: (data: TData) => string,
+    deserializeData: (data: string) => TData,
+    defaultOptions?: JobsOptions,
+}
+
+export function jobCategory<TData>({
+    name,
+    handler,
+    serializeData,
+    deserializeData,
+    defaultOptions,
+}: JobCategoryOptions<TData>) {
+
+    async function addJob(job: JobCategoryData<TData>) {
+        return await addJobs([job])
     }
 
-    async function addJobs(jobs: JobData<TName, TData>[], options?: JobsOptions) {
-        return await queue.addBulk(
-            jobs.map(job => ({
-                name: job.category,
-                data: job.data,
-                opts: {
-                    jobId: job.key ? `${job.category}/${job.key}` : undefined,
-                    delay: job.delay,
-                    ...options
-                }
-            }))
+    async function addJobs(jobs: JobCategoryData<TData>[]) {
+        return await jobQueue.addBulk(
+            returnJobs(jobs)
         );
     }
 
-    async function processJob(data: TData, processFn: (data: TData) => Promise<void>) {
-        await processFn(data)
+    function returnJob(job: JobCategoryData<TData>) {
+        return returnJobs([job])
     }
 
-    return { addJob, addJobs, processJob }
-}
+    function returnJobs(jobs: JobCategoryData<TData>[]) {
+        return jobs.map(job => ({
+            name: name,
+            data: serializeData(job.data),
+            opts: {
+                jobId: job.key ? `${name}:${job.key}` : undefined,
+                delay: job.delay,
+                ...defaultOptions,
+                ...job.options
+            }
+        }))
+    }
 
-export type RelationalData = {
-    from: string,
-    to: string,
-}
+    async function processJob(data: string) {
+        await handler(deserializeData(data))
+    }
 
-type StandardJobName = "likeCount" | "followerCount" | "followingCount" | "replyCount" | "clickCount" | "viewCount" | "userEngagementHistory"
-export const standardJobs = jobCategory<string, StandardJobName>()
+    jobCategories.set(name, processJob)
+
+    return { addJob, addJobs, returnJob, returnJobs }
+}
 
 console.log("The worker started")

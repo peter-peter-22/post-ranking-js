@@ -3,7 +3,7 @@ import { db } from "../..";
 import { views } from "../../schema/views";
 import { persistentDate } from "../persistentDates";
 import { promisesAllTracked } from "../../../utilities/arrays/trackedPromises";
-import { updateUserEngagementHistory } from "./update";
+import { recalculateUserEngagementHistory } from "./update";
 
 /** The last time the engagement history of the users were updates. */
 const lastUpdate=persistentDate("engagementHistoryLastUpdate")
@@ -22,7 +22,7 @@ export async function updateAllEngagementHistory() {// TODO make it faster
     // Update the engagement history of the selected users.
     await promisesAllTracked(
         usersToUpdate.map(
-            user => updateUserEngagementHistory(user.id)
+            user => recalculateUserEngagementHistory(user.id)
         )
     )
     // Update the last update date.

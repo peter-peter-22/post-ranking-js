@@ -5,7 +5,7 @@ import { cachedBulkHSetRead, cachedBulkHSetWrite } from "../bulkHSetRead";
 import { userEngagementHistoryTTL } from "../common";
 import { typedHSet } from "../typedHSet";
 import { redisClient } from "../connect";
-import { scheduleEngagementHistoryUpdate } from "../jobs/engagementHistory";
+import { engagementHistoryJobs } from "../jobs/categories/engagementHistory";
 
 function userEngagementHistoryRedisKey(viewerId: string, posterId: string) {
     return `user:${viewerId}:engagementHistory:${posterId}`;
@@ -58,7 +58,7 @@ export const updateEngagementHistory = async (viewerId: string, updates: { poste
     }
     await multi.exec()
     // Shedule update job
-    await scheduleEngagementHistoryUpdate(viewerId)
+    await engagementHistoryJobs.addJob({ data: viewerId })
     // Write snapshot
-    // TODO
-}
+
+}   
