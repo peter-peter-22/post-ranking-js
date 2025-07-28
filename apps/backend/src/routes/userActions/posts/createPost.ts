@@ -10,6 +10,7 @@ import { personalizePosts } from '../../../posts/hydratePosts';
 import { createPendingPost } from '../../../userActions/posts/createPendingPost';
 import { finalizePost, insertPost } from '../../../userActions/posts/createPost';
 import { getOnePost } from '../../getPost';
+import { userActions } from '../../../userActions/main';
 
 const router = Router();
 
@@ -31,7 +32,7 @@ router.post('/post', async (req: Request, res: Response) => {
     // Get the values of the post
     const post = createPostSchema.parse(req.body);
     // Create the posts
-    const created = await insertPost({ ...post, userId: user.id })
+    const created = await userActions.posts.create.simple({ ...post, userId: user.id })
     // Format the post to the standard format
     const [personalPost] = await personalizePosts(getOnePost(created.id), user)
     // Return created posts
@@ -44,18 +45,8 @@ router.post('/finalizePost', async (req: Request, res: Response) => {
     const user = await authRequestStrict(req)
     // Get the values of the post
     const post = finalizePostSchema.parse(req.body);
-    // Check if the finalized post is valid
-    const [previousPost] = await db
-        .select({
-            userId: posts.userId,
-            pending: posts.pending
-        })
-        .from(posts)
-        .where(eq(posts.id, post.id))
-    if (previousPost.userId !== user.id) throw new HttpError(401, "This is not your post")
-    if (previousPost.pending !== true) throw new HttpError(400, "This post is not pending")
     // Update the posts
-    const created = await finalizePost({ ...post, userId: user.id })
+    const created = await userActions.posts.create.finalize({ ...post, userId: user.id }, user.id)
     // Format the post to the standard format
     const [personalPost] = await personalizePosts(getOnePost(created.id), user)
     // Return updated posts
@@ -67,7 +58,7 @@ router.post('/pendingPost', async (req: Request, res: Response) => {
     // Get user
     const user = await authRequestStrict(req)
     // Create pending posts
-    const id = await createPendingPost(user.id)
+    const id = await userActions.posts.create.pending(user.id)
     // Send back the id
     res.status(201).json({ id })
     console.log("Pending post created")

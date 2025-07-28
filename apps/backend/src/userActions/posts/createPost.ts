@@ -6,6 +6,7 @@ import { chunkedInsert } from "../../db/utils/chunkedInsert";
 import { handlePostInsert } from "../../redis/postContent/write";
 import { PostToFinalize } from "../../routes/userActions/posts/createPost";
 import { prepareAnyPost, preparePosts } from "./preparePost";
+import { HttpError } from "../../middlewares/errorHandler";
 
 /** Insert posts to the database. */
 export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {
@@ -42,8 +43,18 @@ export async function insertPost(post: PostToInsert) {
 }
 
 /** Validate and finalize a post and it's media files. */
-export async function finalizePost(post: PostToFinalize) {
+export async function finalizePost(post: PostToFinalize, userId: string) {
     console.log("Finalizing post..")
+    // Check if the finalized post is valid
+    const [previousPost] = await db
+        .select({
+            userId: posts.userId,
+            pending: posts.pending
+        })
+        .from(posts)
+        .where(eq(posts.id, post.id))
+    if (previousPost.userId !== userId) throw new HttpError(401, "This is not your post")
+    if (previousPost.pending !== true) throw new HttpError(400, "This post is not pending")
     // Finalize media files, and check if they are valid
     if (post.media) await addMedia(post.media)
     // Prepare the post to insert
