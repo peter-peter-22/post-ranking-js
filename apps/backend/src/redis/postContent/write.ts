@@ -13,3 +13,11 @@ export async function handlePostInsert(post: Post) {
         createMentionNotifications(post.mentions, post.id, post.createdAt, post.userId),
     ])
 }
+
+export async function handlePostDelete(post: Post) {
+    await Promise.all([
+        post.replyingTo ? redisClient.hIncrBy(postContentRedisKey(post.replyingTo), "replyCount", -1) : undefined,
+        post.replyingTo && post.repliedUser ? updateEngagementHistory(post.userId, [{ posterId: post.repliedUser, addReplies: 1 }]) : undefined,
+        redisClient.del(postContentRedisKey(post.id))
+    ])
+}

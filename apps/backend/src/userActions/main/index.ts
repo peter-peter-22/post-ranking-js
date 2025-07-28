@@ -1,6 +1,7 @@
 import { setCachedFollow } from "../../redis/users/follows";
 import { createPendingPost } from "../posts/createPendingPost";
 import { finalizePost, insertPost } from "../posts/createPost";
+import { deletePost, restorePost } from "../posts/delete";
 import { addClicks, removeClicks } from "./posts/engagements/actions/clicks";
 import { addLikes, removeLikes } from "./posts/engagements/actions/likes";
 import { addViews, removeViews } from "./posts/engagements/actions/views";
@@ -34,6 +35,8 @@ export const userActions = {
             pending:createPendingPost,
             finalize:finalizePost,
             simple: insertPost
-        }
+        },
+        delete:deletePost,
+        restore:restorePost
     }
 }
