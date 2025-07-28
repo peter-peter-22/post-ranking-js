@@ -2,16 +2,15 @@ import { setCachedFollow } from "../../redis/users/follows";
 import { createPendingPost } from "../posts/createPendingPost";
 import { finalizePost, insertPost } from "../posts/createPost";
 import { deletePost, restorePost } from "../posts/delete";
-import { addClicks, removeClicks } from "./posts/engagements/actions/clicks";
-import { addLikes, removeLikes } from "./posts/engagements/actions/likes";
-import { addViews, removeViews } from "./posts/engagements/actions/views";
-import { processEngagementUpdates } from "./posts/engagements/updates";
-import { updateUser } from "./users/update";
+import { addClicks, removeClicks } from "../posts/engagements/actions/clicks";
+import { addLikes, removeLikes } from "../posts/engagements/actions/likes";
+import { addViews, removeViews } from "../posts/engagements/actions/views";
+import { updateUser } from "../users/update";
 
 export const userActions = {
     users: {
         follow: setCachedFollow,
-        update:updateUser
+        update: updateUser
     },
     posts: {
         engagements: {
@@ -29,14 +28,13 @@ export const userActions = {
                     remove: removeViews
                 },
             },
-            processUpdates: processEngagementUpdates
         },
-        create:{
-            pending:createPendingPost,
-            finalize:finalizePost,
+        create: {
+            pending: createPendingPost,
+            finalize: finalizePost,
             simple: insertPost
         },
-        delete:deletePost,
-        restore:restorePost
+        delete: deletePost,
+        restore: restorePost
     }
 }

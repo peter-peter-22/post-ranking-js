@@ -1,14 +1,14 @@
 import { and, eq, inArray, sql } from "drizzle-orm"
-import { userActions } from "../../.."
-import { db } from "../../../../../db"
-import { clicks } from "../../../../../db/schema/clicks"
-import { selectTargetPosts } from "../../../../posts/common"
+import { db } from "../../../../db"
+import { likes } from "../../../../db/schema/likes"
+import { selectTargetPosts } from "../../common"
+import { processEngagementUpdates } from "../updates"
 
-export async function addClicks(userId: string, postIds: string[]) {
+export async function addLikes(userId: string, postIds: string[]) {
     if (postIds.length === 0) return
     const targetPosts = selectTargetPosts(postIds)
     const updated = await db
-        .insert(clicks)
+        .insert(likes)
         .select(db
             .select({
                 postId: targetPosts.id,
@@ -20,8 +20,8 @@ export async function addClicks(userId: string, postIds: string[]) {
         )
         .onConflictDoNothing()
         .returning()
-    await userActions.posts.engagements.processUpdates(userId, {
-        clicks: updated.map(e => ({
+    await processEngagementUpdates(userId, {
+        likes: updated.map(e => ({
             postId: e.postId,
             value: true,
             posterId: e.posterId,
@@ -30,17 +30,17 @@ export async function addClicks(userId: string, postIds: string[]) {
     })
 }
 
-export async function removeClicks(userId: string, postIds: string[]) {
-        if (postIds.length === 0) return
+export async function removeLikes(userId: string, postIds: string[]) {
+    if (postIds.length === 0) return
     const updated = await db
-        .delete(clicks)
+        .delete(likes)
         .where(and(
-            eq(clicks.userId, userId),
-            inArray(clicks.postId, postIds)
+            eq(likes.userId, userId),
+            inArray(likes.postId, postIds)
         ))
         .returning()
-    await userActions.posts.engagements.processUpdates(userId, {
-        clicks: updated.map(e => ({
+    await processEngagementUpdates(userId, {
+        likes: updated.map(e => ({
             postId: e.postId,
             value: false,
             posterId: e.posterId,

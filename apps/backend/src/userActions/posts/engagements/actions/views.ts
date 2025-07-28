@@ -1,14 +1,14 @@
 import { and, eq, inArray, sql } from "drizzle-orm"
-import { userActions } from "../../.."
-import { db } from "../../../../../db"
-import { likes } from "../../../../../db/schema/likes"
-import { selectTargetPosts } from "../../../../posts/common"
+import { db } from "../../../../db"
+import { views } from "../../../../db/schema/views"
+import { selectTargetPosts } from "../../common"
+import { processEngagementUpdates } from "../updates"
 
-export async function addLikes(userId: string, postIds: string[]) {
+export async function addViews(userId: string, postIds: string[]) {
     if (postIds.length === 0) return
     const targetPosts = selectTargetPosts(postIds)
     const updated = await db
-        .insert(likes)
+        .insert(views)
         .select(db
             .select({
                 postId: targetPosts.id,
@@ -20,8 +20,8 @@ export async function addLikes(userId: string, postIds: string[]) {
         )
         .onConflictDoNothing()
         .returning()
-    await userActions.posts.engagements.processUpdates(userId, {
-        likes: updated.map(e => ({
+    await processEngagementUpdates(userId, {
+        views: updated.map(e => ({
             postId: e.postId,
             value: true,
             posterId: e.posterId,
@@ -30,17 +30,17 @@ export async function addLikes(userId: string, postIds: string[]) {
     })
 }
 
-export async function removeLikes(userId: string, postIds: string[]) {
+export async function removeViews(userId: string, postIds: string[]) {
     if (postIds.length === 0) return
     const updated = await db
-        .delete(likes)
+        .delete(views)
         .where(and(
-            eq(likes.userId, userId),
-            inArray(likes.postId, postIds)
+            eq(views.userId, userId),
+            inArray(views.postId, postIds)
         ))
         .returning()
-    await userActions.posts.engagements.processUpdates(userId, {
-        likes: updated.map(e => ({
+    await processEngagementUpdates(userId, {
+        views: updated.map(e => ({
             postId: e.postId,
             value: false,
             posterId: e.posterId,
