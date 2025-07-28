@@ -59,6 +59,4 @@ export const updateEngagementHistory = async (viewerId: string, updates: { poste
     await multi.exec()
     // Shedule update job
     await engagementHistoryJobs.addJob({ data: viewerId })
-    // Write snapshot
-
 }   

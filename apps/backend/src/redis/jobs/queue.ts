@@ -21,9 +21,9 @@ export const jobQueue = new Queue('main', {
     }
 });
 
-const worker = new Worker(
+export const worker = new Worker(
     'main',
-    processUpdateJob,
+    processJob,
     {
         connection: redisJobsConnection,
         concurrency: 10,
@@ -48,12 +48,14 @@ worker.on('error', err => {
 
 const jobCategories: Map<string, (data: any) => Promise<void>> = new Map()
 
-async function processUpdateJob(job: Job): Promise<void> {
+async function processJob(job: Job): Promise<void> {
     console.log(`Processing update job. Type: ${job.name} Data: ${job.data} Id: ${job.id}`)
     const handler = jobCategories.get(job.name)
     if (!handler) throw new Error(`No handler for job ${job.name}`)
     await handler(job.data)
 }
+
+export type JobToAdd={name:string,data:any,opts:JobsOptions}
 
 export type JobCategoryData<TData> = { data: TData, delay?: number, options?: JobsOptions, key?: string }
 

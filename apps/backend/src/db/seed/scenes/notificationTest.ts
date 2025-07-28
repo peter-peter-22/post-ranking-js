@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm"
 import { db } from "../.."
-import { follow } from "../../../userActions/follow"
 import { insertPost } from "../../../userActions/posts/createPost"
 import { likePost } from "../../../userActions/posts/like"
 import { follows } from "../../schema/follows"
@@ -8,6 +7,7 @@ import { likes } from "../../schema/likes"
 import { notifications } from "../../schema/notifications"
 import { posts } from "../../schema/posts"
 import { UserCommon, users } from "../../schema/users"
+import { setCachedFollow } from "../../../redis/users/follows"
 
 export async function notificationTest(viewer: UserCommon) {
     const [post] = await db.select().from(posts).where(eq(posts.userId, viewer.id)).limit(1)
@@ -18,7 +18,7 @@ export async function notificationTest(viewer: UserCommon) {
     const actors = await db.select().from(users).limit(10)
     for (const user of actors) {
         await likePost(post.id, user.id, true)
-        await follow(user.id, viewer.id)
+        await setCachedFollow(user.id, viewer.id,true)
     }
     await Promise.all(
         actors

@@ -2,7 +2,7 @@ import { updateViewCounts } from "../../../db/controllers/posts/engagement/views
 import { standardDelay } from "../common";
 import { standardJob } from "../standardJob";
 
-export const viewsCountJobs = standardJob({
+export const viewCountJobs = standardJob({
     name: "viewCount",
     handler: updateViewCounts,
     defaultOptions: { delay: standardDelay }
