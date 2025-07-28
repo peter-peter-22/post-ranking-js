@@ -74,17 +74,17 @@ export function jobCategory<TData>({
 }: JobCategoryOptions<TData>) {
 
     async function addJob(job: JobCategoryData<TData>) {
-        return await addJobs([job])
+        await addJobs([job])
     }
 
     async function addJobs(jobs: JobCategoryData<TData>[]) {
-        return await jobQueue.addBulk(
+        await jobQueue.addBulk(
             returnJobs(jobs)
         );
     }
 
     function returnJob(job: JobCategoryData<TData>) {
-        return returnJobs([job])
+        return returnJobs([job])[0]
     }
 
     function returnJobs(jobs: JobCategoryData<TData>[]) {

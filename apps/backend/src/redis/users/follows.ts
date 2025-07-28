@@ -5,8 +5,11 @@ import { followSetTTL } from "../common"
 import { redisClient } from "../connect"
 import { createPersistentSet } from "../persistentSet"
 import { userContentRedisKey } from "./read"
-import { standardJobs } from "../jobs/queue"
 import { createFollowNotification } from "../../db/controllers/notifications/createNotification"
+import { jobQueue } from "../jobs/queue"
+import { followerCountJobs } from "../jobs/categories/followerCount"
+import { followingCountJobs } from "../jobs/categories/followingCount"
+import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
 
 function userFollowListRedisKey(id: string) {
     return `user:${id}:following`
@@ -62,7 +65,7 @@ export async function setCachedFollow(followerId: string, followedId: string, va
             ))
             .returning()
     )
-    if (updated) await handleFollowChange(updated,value)
+    if (updated) await handleFollowChange(updated, value)
 }
 
 async function handleFollowChange(updated: Follow, value: boolean) {
@@ -71,10 +74,11 @@ async function handleFollowChange(updated: Follow, value: boolean) {
         redisClient.multi()
             .hIncrBy(userContentRedisKey(updated.followedId), "followerCount", add)
             .hIncrBy(userContentRedisKey(updated.followerId), "followingCount", add),
-        standardJobs.addJobs([
-            { category: "followingCount", data: updated.followerId, key: updated.followerId },
-            { category: "followerCount", data: updated.followedId, key: updated.followedId }
+        jobQueue.addBulk([
+            followerCountJobs.returnJob({ data: updated.followedId }),
+            followingCountJobs.returnJob({ data: updated.followerId })
         ]),
-        createFollowNotification(updated.followedId, updated.createdAt)
+        createFollowNotification(updated.followedId, updated.createdAt),
+        createFollowSnapshot(updated.followerId, updated.followedId, value)
     ])
 }
