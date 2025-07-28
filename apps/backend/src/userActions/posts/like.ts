@@ -7,6 +7,8 @@ import { likeCountJobs } from "../../redis/jobs/categories/likeCount";
 import { postContentRedisKey } from "../../redis/postContent/read";
 import { updateEngagementHistory } from "../../redis/users/engagementHistory";
 import { selectTargetPost } from "./common";
+import { jobQueue } from "../../redis/jobs/queue";
+import { userEmbeddingJobs } from "../../redis/jobs/categories/userEmbedding";
 
 export async function likePost(postId: string, userId: string, value: boolean) {
     // Handle changes in the DB
@@ -20,13 +22,16 @@ export async function likePost(postId: string, userId: string, value: boolean) {
         // Update redis
         await Promise.all([
             // Schedule jobs to update counters
-            likeCountJobs.addJob({ data: postId }),
+            jobQueue.addBulk([
+                likeCountJobs.returnJob({ data: postId }),
+                userEmbeddingJobs.returnJob({ data: userId })
+            ]),
             // Increment counter
             redisClient.hIncrBy(postContentRedisKey(postId), "likeCount", add),
             // Update engagement history
             updateEngagementHistory(userId, [{ posterId: updated.posterId, addLikes: add }]),
             // Create notification if needed
-            value === true && updated.posterId !== userId ? createLikeNotification(updated.posterId, updated.postId, updated.createdAt) : undefined
+            value === true && updated.posterId !== userId ? createLikeNotification(updated.posterId, updated.postId, updated.createdAt) : undefined,
         ])
     }
 }
