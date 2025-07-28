@@ -3,8 +3,7 @@ import { db } from "../../db";
 import { createLikeNotification } from "../../db/controllers/notifications/createNotification";
 import { likes } from "../../db/schema/likes";
 import { redisClient } from "../../redis/connect";
-import { standardDelay } from "../../redis/jobs/common";
-import { standardJobs } from "../../redis/jobs/queue";
+import { likeCountJobs } from "../../redis/jobs/categories/likeCount";
 import { postContentRedisKey } from "../../redis/postContent/read";
 import { updateEngagementHistory } from "../../redis/users/engagementHistory";
 import { selectTargetPost } from "./common";
@@ -21,9 +20,7 @@ export async function likePost(postId: string, userId: string, value: boolean) {
         // Update redis
         await Promise.all([
             // Schedule jobs to update counters
-            standardJobs.addJobs([
-                { category: "likeCount", data: postId, key: postId, delay: standardDelay },
-            ]),
+            likeCountJobs.addJob({ data: postId }),
             // Increment counter
             redisClient.hIncrBy(postContentRedisKey(postId), "likeCount", add),
             // Update engagement history
