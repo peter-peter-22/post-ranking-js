@@ -3,7 +3,8 @@ import { db } from "../../db"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { HttpError } from "../../middlewares/errorHandler"
-import { handlePostDelete, handlePostInsert } from "../../redis/postContent/write"
+import { redisClient } from "../../redis/connect"
+import { postContentRedisKey } from "../../redis/postContent/read"
 
 export async function deletePost(postId: string, user: User) {
     // Update the deleted state of the post
@@ -18,7 +19,7 @@ export async function deletePost(postId: string, user: User) {
     // If it was deleted
     if (!deleted) throw new HttpError(400, "This post does not exists or it is not your post.")
     // Update cache
-    await handlePostDelete(deleted)
+    await redisClient.hSet(postContentRedisKey(postId), "deleted", "true")
     return deleted
 }
 
@@ -32,9 +33,9 @@ export async function restorePost(postId: string, user: User) {
             eq(posts.userId, user.id)
         ))
         .returning()
-    // Update cache
-    await handlePostInsert({post:restored})
     // Check if it was restored
     if (!restored) throw new HttpError(400, "This post does not exists or it is not your post.")
-        return restored
+    // Update cache
+    await redisClient.hSet(postContentRedisKey(postId), "deleted", "false")
+    return restored
 }

@@ -113,6 +113,10 @@ export function writeReplyCache(replies: Post[], post: Post, multi: RedisMulti) 
     if (repliesOfAuthor.length > 0) multi.sAdd(repliesOfAuthorRedisKey(post.id), repliesOfAuthor.map(e => e.id))
 }
 
+export function deleteReplyCache(replies: Post[], multi: RedisMulti) {
+
+}
+
 function updateCommentSectionTTLs(multi: RedisMulti, postId: string, createdAt: Date) {
     const ttl = getMainFeedTTL(createdAt, commentSectionTTL)
     multi.expire(repliesExistRedisKey(postId), ttl)

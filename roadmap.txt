@@ -1,3 +1,5 @@
-add replied by followed to enrich post
+fix post delete cache
 replace all occurences of personalizepost
+use cache in reply feed
+
 redis-cli
