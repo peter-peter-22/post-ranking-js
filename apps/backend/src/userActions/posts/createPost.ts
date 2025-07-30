@@ -33,12 +33,12 @@ export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {
 }
 
 export async function insertPost(post: PostToInsert) {
-    post = await prepareAnyPost(post)
+    const preparedPost = await prepareAnyPost(post)
     const [created] = await db
         .insert(posts)
-        .values(post)
+        .values(preparedPost.post)
         .returning()
-    await handlePostInsert(created)
+    await handlePostInsert({ post: created, replied: preparedPost.replied })
     return created
 }
 
@@ -58,15 +58,15 @@ export async function finalizePost(post: PostToFinalize, userId: string) {
     // Finalize media files, and check if they are valid
     if (post.media) await addMedia(post.media)
     // Prepare the post to insert
-    const postToInsert = await prepareAnyPost(post)
+    const preparedPost = await prepareAnyPost(post)
     // Exclude the id from the update to avoid error
-    const { id, ...valuesToUpdate } = postToInsert
+    const { id, ...valuesToUpdate } = preparedPost.post
     // Update the pending post to set it's values and remove the pending status
     const [created] = await db
         .update(posts)
         .set({ ...valuesToUpdate, pending: false })
         .where(eq(posts.id, post.id))
         .returning()
-    await handlePostInsert(created)
+    await handlePostInsert(preparedPost)
     return created
 }

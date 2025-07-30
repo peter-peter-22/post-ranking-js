@@ -1,3 +1,4 @@
+import { RedisMulti } from "./common";
 import { redisClient } from "./connect";
 import { HSetValue, TypedHSetHandler } from "./typedHSet";
 
@@ -14,7 +15,7 @@ export function cachedBulkHSetRead<T extends HSetValue>({
     getId: (value: T) => string,
     getTTL: (data: T) => number
     fallback: (ids: string[]) => Promise<T[]>,
-    defaultValue?: T
+    defaultValue?: (id:string)=>T
 }) {
     const fetch = async (ids: string[]) => {
         if (ids.length === 0) return new Map<string, T | undefined>()
@@ -49,7 +50,7 @@ export function cachedBulkHSetRead<T extends HSetValue>({
             for (const id of missingIds) {
                 // Get the data of the missing id
                 // The default value must be used if the database does not necessarily contains all requested values to avoid further fallbacks
-                const data = dataMap.get(id) || defaultValue
+                const data = dataMap.get(id) || defaultValue && defaultValue(id) 
                 if (!data) {
                     console.warn(`Missing data without fallback value at ${getKey(id)}`)
                     continue
@@ -90,12 +91,16 @@ export function cachedBulkHSetWrite<T extends HSetValue>({
 
     const write = async (data: T[]) => {
         const multi = redisClient.multi()
+        writeMulti(data, multi)
+        await multi.exec()
+    }
+
+    const writeMulti = (data: T[], multi: RedisMulti) => {
         for (const el of data) {
             multi.hSet(getKey(el.id), schema.serialize(el))
             multi.expire(getKey(el.id), getTTL(el))
         }
-        await multi.exec()
     }
 
-    return { write }
+    return { write, writeMulti }
 }

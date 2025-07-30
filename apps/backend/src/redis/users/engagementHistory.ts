@@ -32,7 +32,8 @@ export const cachedEngagementHistoryRead = async (viewerId: string, posterIds: s
                 eq(engagementHistory.viewerId, viewerId),
                 inArray(engagementHistory.publisherId, posterIds)
             )),
-        getId: (value: EngagementHistory) => value.publisherId
+        getId: (value: EngagementHistory) => value.publisherId,
+        defaultValue:(publisherId:string)=>({viewerId,publisherId,likes:0,replies:0,clicks:0})
     })
         .read(posterIds)
 }

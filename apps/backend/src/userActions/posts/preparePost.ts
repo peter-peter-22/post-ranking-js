@@ -3,9 +3,10 @@ import { eq } from "drizzle-orm";
 import emojiRegex from "emoji-regex";
 import { db } from "../../db";
 import { generateEmbeddingVectors } from "../../db/controllers/embedding";
-import { posts, PostToInsert } from "../../db/schema/posts";
+import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { HttpError } from "../../middlewares/errorHandler";
 import { normalizeVector } from "../../utilities/arrays/normalize";
+import { cachedPostRead } from "../../redis/postContent/read";
 
 /** Bulk prepare posts before insert. */
 export async function preparePosts(data: PostToInsert[]) {
@@ -41,7 +42,7 @@ export async function preparePost(post: PostToInsert) {
     post.keywords = [...new Set([...keywords[0], ...post.hashtags || []])]
     post.embeddingNormalized = post.embeddingText ? normalizeVector(post.embedding) : null
 
-    return post
+    return { post }
 }
 
 function processPostText(post: PostToInsert) {
@@ -55,26 +56,20 @@ function processPostText(post: PostToInsert) {
 /** Calculate the metadata of a reply before insert. */
 export async function prepareReply(post: PostToInsert) {
     processPostText(post)
-    await addRepliedUser(post)
-    return post
-}
-
-async function addRepliedUser(post: PostToInsert) {
     if (!post.replyingTo) throw new HttpError(422, "Invalid reply.")
-    const [repliedPost] = await db
-        .select({ userId: posts.userId, id: posts.id })
-        .from(posts)
-        .where(eq(posts.id, post.replyingTo))
+    const [repliedPost] = [...(await cachedPostRead.read([post.replyingTo])).values()]
     if (!repliedPost) throw new HttpError(404, "The replied post does not exists.")
     post.repliedUser = repliedPost.userId
+    return { post, replied: repliedPost }
 }
+export type PreparedPost = { post: Post, replied?: Post }
 
 /** Calculate the medadata of a post or a reply before insert. */
-export async function prepareAnyPost(data: PostToInsert) {
+export async function prepareAnyPost(data: PostToInsert): Promise<PreparedPost> {
     const postToInsert = data.replyingTo ?
-        await prepareReply(data)
+        await prepareReply(data) as PreparedPost
         :
-        await preparePost(data)
+        await preparePost(data) as PreparedPost
     return postToInsert
 }
 

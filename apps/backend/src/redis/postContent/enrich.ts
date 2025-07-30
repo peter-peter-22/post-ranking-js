@@ -4,6 +4,7 @@ import { PersonalPost } from "../../posts/hydratePosts";
 import { cosineSimilarity } from "../../utilities/arrays/cosineSimilarity";
 import { removeUndefinedMapValues } from "../../utilities/arrays/removeUndefinedMapValues";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
+import { getFollowedReplierCounts } from "../replies";
 import { cachedEngagementHistoryRead } from "../users/engagementHistory";
 import { getEnrichedUsers } from "../users/enrich";
 import { cachedPostRead } from "./read";
@@ -18,20 +19,22 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
     }
     const viewerId = viewer?.id
     // Fetch
-    const [users, likes, views, clicks, engagementHistories] = await Promise.all([
+    const [users, likes, views, clicks, engagementHistories, followedReplierCounts] = await Promise.all([
         getEnrichedUsers([...userIds], viewerId),
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedEngagementHistoryRead(viewerId, [...userIds]) : undefined
+        viewerId ? cachedEngagementHistoryRead(viewerId, [...userIds]) : undefined,
+        viewerId ? getFollowedReplierCounts(viewerId, [...posts.values()]) : undefined
     ])
     // Aggregate
-    const enrichedPosts: PersonalPost[] = [...posts.values()].map(post => {
+    const enrichedPosts: PersonalPost[] = [...posts.values()].map((post, i) => {
         const liked = likes?.get(post.id) || false;
         const viewed = views?.get(post.id) || false;
         const clicked = clicks?.get(post.id) || false;
         const engagementHistory = engagementHistories?.get(post.userId) || null
         const user = users.get(post.userId)
+        const followedReplierCount = followedReplierCounts?.[i] || 0
         if (!user) throw new Error("Missing user")
         return {
             id: post.id,
@@ -46,6 +49,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
             similarity: viewer && viewer.embedding && post.embedding ? cosineSimilarity(post.embedding, viewer.embedding) : 0,
             engagementHistory: engagementHistory,
             repliedByFollowed: false,
+            followedReplierCount,
             liked: liked,
             viewed: viewed,
             clicked: clicked,

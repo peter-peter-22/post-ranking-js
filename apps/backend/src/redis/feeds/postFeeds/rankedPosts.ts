@@ -1,23 +1,18 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../../db";
 import { posts } from "../../../db/schema/posts";
-import { ClientUser } from "@me/schemas/src/zod/user";
 import { HttpError } from "../../../middlewares/errorHandler";
 import { redisClient } from "../../connect";
 import { candidateColumns } from "../../../posts/common";
 import { personalizePosts, PersonalPost } from "../../../posts/hydratePosts";
 import { minCandidates, postFeedTTL, postsPerRequest } from "./common";
 import { User } from "../../../db/schema/users";
+import { ZSetEntry } from "../../common";
 
 type PostFeedMeta<TPageParams> = {
     previousPostCount?: number,
     hasMore: boolean,
     pageParams?: TPageParams
-}
-
-type ZSetEntry = {
-    value: string,
-    score: number
 }
 
 export async function getPaginatedRankedPosts<TPageParams>({
@@ -36,7 +31,7 @@ export async function getPaginatedRankedPosts<TPageParams>({
     ttl?: number
 }) {
     console.log(`Requested ranked post feed "${feedName}" for user "${user.id}", offset: ${offset}`)
-    const key = `postFeeds:${feedName}:${user.id}`
+    const key = `user:${user.id}:feeds:posts:${feedName}`
     const metaKey = key + ":meta"
     const listKey = key + ":list"
 
@@ -75,7 +70,7 @@ export async function getPaginatedRankedPosts<TPageParams>({
     else {
         // Fetch the metadata and the post count from redis
         let [meta_, postCount_] = await redisClient.multi()//TODO: extend expiration
-            .getEx(metaKey,{EX:ttl})
+            .getEx(metaKey, { EX: ttl })
             .expire(listKey, ttl)
             .zCard(listKey)
             .exec()

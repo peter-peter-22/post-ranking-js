@@ -1,2 +1,3 @@
 add replied by followed to enrich post
 replace all occurences of personalizepost
+redis-cli

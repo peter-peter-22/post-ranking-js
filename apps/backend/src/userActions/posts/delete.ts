@@ -33,7 +33,7 @@ export async function restorePost(postId: string, user: User) {
         ))
         .returning()
     // Update cache
-    await handlePostInsert(restored)
+    await handlePostInsert({post:restored})
     // Check if it was restored
     if (!restored) throw new HttpError(400, "This post does not exists or it is not your post.")
         return restored

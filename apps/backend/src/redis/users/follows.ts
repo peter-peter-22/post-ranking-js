@@ -11,7 +11,7 @@ import { followerCountJobs } from "../jobs/categories/followerCount"
 import { followingCountJobs } from "../jobs/categories/followingCount"
 import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
 
-function userFollowListRedisKey(id: string) {
+export function userFollowListRedisKey(id: string) {
     return `user:${id}:following`
 }
 

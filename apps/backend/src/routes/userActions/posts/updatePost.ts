@@ -37,9 +37,9 @@ router.post('/', async (req: Request, res: Response) => {
     // Update the media of the post
     await updateMedia(previousPost.media || [], post.media || [])
     // Prepare the post
-    const postToInsert = await prepareAnyPost({ ...post, userId: user.id })
+    const preparedPost = await prepareAnyPost({ ...post, userId: user.id })
     // Exclude the id from the update to avoid error while updating
-    const { id, ...valuesToUpdate } = postToInsert
+    const { id, ...valuesToUpdate } = preparedPost.post
     // Update the post
     const [updatedPost] = await db
         .update(posts)

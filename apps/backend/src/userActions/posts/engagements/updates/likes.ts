@@ -1,7 +1,7 @@
 import { EngagementActionResult, ProcessContext } from "."
-import { createLikeNotification } from "../../../../../db/controllers/notifications/createNotification"
-import { likeCountJobs } from "../../../../../redis/jobs/categories/likeCount"
-import { postContentRedisKey } from "../../../../../redis/postContent/read"
+import { createLikeNotification } from "../../../../db/controllers/notifications/createNotification"
+import { likeCountJobs } from "../../../../redis/jobs/categories/likeCount"
+import { postContentRedisKey } from "../../../../redis/postContent/read"
 
 export  function setLikes(userId: string, actions: EngagementActionResult[], ctx: ProcessContext) {
     for (const action of actions) {

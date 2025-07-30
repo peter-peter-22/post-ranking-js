@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { eq, not } from "drizzle-orm";
 import { db } from "../..";
+import { insertPost } from "../../../userActions/posts/createPost";
 import { clearMainUser } from "../../reset/clearMainUser";
 import { follows } from "../../schema/follows";
 import { users } from "../../schema/users";
-import { bulkInsertPosts, insertPost } from "../../../userActions/posts/createPost";
 
 //** A post appears with all kinds of replies to test the reply ranker. */
 export async function testCommentRanker() {

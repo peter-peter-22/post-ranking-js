@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.js",
-    "dev": "nodemon --inspect=0.0.0.0 --legacy-watch --exec tsx src/index.ts",
+    "dev": "nodemon --inspect=0.0.0.0 --exec tsx src/index.ts",
     "studio": "drizzle-kit studio",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",

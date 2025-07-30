@@ -1,9 +1,9 @@
 import { EditProfileForm } from "@me/schemas/src/zod/createUser"
 import { eq } from "drizzle-orm"
-import { db } from "../../../db"
-import { updateMedia } from "../../../db/controllers/pendingUploads/updateMedia"
-import { User, userColumns, users } from "../../../db/schema/users"
-import { cachedUsersWrite } from "../../../redis/users/read"
+import { User, userColumns, users } from "../../db/schema/users"
+import { updateMedia } from "../../db/controllers/pendingUploads/updateMedia"
+import { db } from "../../db"
+import { cachedUsersWrite } from "../../redis/users/read"
 
 export async function updateUser(user:User,newUser:EditProfileForm){
     // Update the media of the user
