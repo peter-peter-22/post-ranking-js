@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authRequestStrict } from "../../authentication";
 import { getNotificationCount } from "../../db/controllers/notifications/getCount";
 import { redisClient } from "../../redis/connect";
-import { postContentRedisKey } from "../../redis/postContent/read";
+import { postContentRedisKey } from "../../redis/postContent";
 import { userActions } from "../../userActions/main";
 
 const router = Router();

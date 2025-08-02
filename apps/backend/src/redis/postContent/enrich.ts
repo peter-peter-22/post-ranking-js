@@ -4,10 +4,10 @@ import { PersonalPost } from "../../posts/hydratePosts";
 import { cosineSimilarity } from "../../utilities/arrays/cosineSimilarity";
 import { removeUndefinedMapValues } from "../../utilities/arrays/removeUndefinedMapValues";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
-import { getFollowedReplierCounts } from "../replies";
+import { getFollowedReplierCounts } from "./replies";
 import { cachedEngagementHistoryRead } from "../users/engagementHistory";
 import { getEnrichedUsers } from "../users/enrich";
-import { cachedPostRead } from "./read";
+import { cachedPostRead } from ".";
 
 export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
     // Format 
@@ -71,7 +71,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
 export async function getEnrichedPosts(ids: string[], viewer?: User) {
     return await enrichPosts(
         removeUndefinedMapValues(
-            await cachedPostRead.read(ids)
+            await cachedPostRead(ids)
         ),
         viewer
     )

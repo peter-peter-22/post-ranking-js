@@ -2,14 +2,14 @@ import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { User, users } from "../../db/schema/users";
 import { cachedBulkHSetRead, cachedBulkHSetWrite } from "../bulkHSetRead";
-import { userContentTTL } from "../common";
+import { userTTL } from "../common";
 import { typedHSet } from "../typedHSet";
 
 export function userContentRedisKey(id: string) {
     return `user:${id}:content`;
 }
 
-const getTTL = () => userContentTTL
+const getTTL = () => userTTL
 
 const schema = typedHSet<User>({
     id: "string",
@@ -33,7 +33,7 @@ export const cachedUsersRead = cachedBulkHSetRead<User>({
     schema,
     getTTL,
     getKey: userContentRedisKey,
-    fallback: async (ids: string[]) => await db.select().from(users).where(inArray(users.id, ids)),
+    generate: async (ids: string[]) => await db.select().from(users).where(inArray(users.id, ids)),
     getId: (user: User) => user.id
 })
 

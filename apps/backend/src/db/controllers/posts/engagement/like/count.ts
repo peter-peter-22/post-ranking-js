@@ -3,7 +3,7 @@ import { db } from "../../../..";
 import { redisClient } from "../../../../../redis/connect";
 import { likes } from "../../../../schema/likes";
 import { posts } from "../../../../schema/posts";
-import { postContentRedisKey } from "../../../../../redis/postContent/read";
+import { postContentRedisKey } from "../../../../../redis/postContent";
 
 /** Recalculate the like count on a single post. */
 export async function updateLikeCount(postId: string) {

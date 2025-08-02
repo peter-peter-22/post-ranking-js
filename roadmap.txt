@@ -1,5 +1,24 @@
-fix post delete cache
-replace all occurences of personalizepost
 use cache in reply feed
+replace all occurences of personalizepost and post process post
 
 redis-cli
+
+Redis itself won’t trigger an event on key expiry unless you enable keyspace notifications.
+You could:
+
+CONFIG SET notify-keyspace-events Ex
+Then subscribe in your app to "__keyevent@0__:expired" for your post keys:
+
+const sub = redis.duplicate();
+await sub.connect();
+await sub.configSet('notify-keyspace-events', 'Ex');
+
+sub.pSubscribe('__keyevent@0__:expired', async (msg, key) => {
+  if (key.startsWith('post:')) {
+    const postId = key.split(':')[1];
+    const likeCount = await redis.hget(key, 'likeCount');
+    if (likeCount) {
+      await db.query('UPDATE posts SET like_count = $1 WHERE id = $2', [likeCount, postId]);
+    }
+  }
+});

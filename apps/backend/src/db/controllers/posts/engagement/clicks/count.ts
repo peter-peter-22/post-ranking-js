@@ -3,7 +3,7 @@ import { db } from "../../../..";
 import { redisClient } from "../../../../../redis/connect";
 import { clicks } from "../../../../schema/clicks";
 import { posts } from "../../../../schema/posts";
-import { postContentRedisKey } from "../../../../../redis/postContent/read";
+import { postContentRedisKey } from "../../../../../redis/postContent";
 
 /**Recalculate the click count of a post */
 export async function updateClickCount(postId: string) {

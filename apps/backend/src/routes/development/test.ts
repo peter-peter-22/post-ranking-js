@@ -5,7 +5,7 @@ import { db } from '../../db';
 import { posts } from '../../db/schema/posts';
 import { users } from '../../db/schema/users';
 import { getEnrichedPosts } from '../../redis/postContent/enrich';
-import { cachedPostRead } from '../../redis/postContent/read';
+import { cachedPostRead } from '../../redis/postContent';
 import { getEnrichedUsers } from '../../redis/users/enrich';
 import { cachedUsersRead } from '../../redis/users/read';
 

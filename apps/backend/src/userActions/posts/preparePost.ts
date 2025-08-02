@@ -6,7 +6,7 @@ import { generateEmbeddingVectors } from "../../db/controllers/embedding";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { HttpError } from "../../middlewares/errorHandler";
 import { normalizeVector } from "../../utilities/arrays/normalize";
-import { cachedPostRead } from "../../redis/postContent/read";
+import { cachedPostRead } from "../../redis/postContent";
 
 /** Bulk prepare posts before insert. */
 export async function preparePosts(data: PostToInsert[]) {

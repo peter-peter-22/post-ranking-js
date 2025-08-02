@@ -1,6 +1,6 @@
 import { EngagementActionResult, ProcessContext } from "."
 import { viewCountJobs } from "../../../../redis/jobs/categories/viewCount"
-import { postContentRedisKey } from "../../../../redis/postContent/read"
+import { postContentRedisKey } from "../../../../redis/postContent"
 
 export async function setViews(userId: string, actions: EngagementActionResult[], ctx: ProcessContext) {
     for (const action of actions) {

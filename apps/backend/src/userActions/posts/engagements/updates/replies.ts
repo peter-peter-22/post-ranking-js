@@ -1,7 +1,7 @@
 import { EngagementActionResult, ProcessContext } from "."
 import { createReplyNotification } from "../../../../db/controllers/notifications/createNotification"
 import { replyCountJobs } from "../../../../redis/jobs/categories/replyCount"
-import { postContentRedisKey } from "../../../../redis/postContent/read"
+import { postContentRedisKey } from "../../../../redis/postContent"
 
 export  function setReplies(userId: string, actions: EngagementActionResult[], ctx: ProcessContext) {
     for (const action of actions) {

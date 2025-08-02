@@ -10,7 +10,7 @@ import { personalizePosts } from '../../../posts/hydratePosts';
 import { prepareAnyPost } from '../../../userActions/posts/preparePost';
 import { getOnePost } from '../../getPost';
 import { createPostSchema } from './createPost';
-import { cachedPostWrite } from '../../../redis/postContent/read';
+import { cachedPostWrite } from '../../../redis/postContent';
 
 const router = Router();
 

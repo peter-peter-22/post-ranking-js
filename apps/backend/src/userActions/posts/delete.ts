@@ -4,7 +4,7 @@ import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { HttpError } from "../../middlewares/errorHandler"
 import { redisClient } from "../../redis/connect"
-import { postContentRedisKey } from "../../redis/postContent/read"
+import { postContentRedisKey } from "../../redis/postContent"
 
 export async function deletePost(postId: string, user: User) {
     // Update the deleted state of the post

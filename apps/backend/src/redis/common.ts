@@ -1,17 +1,10 @@
 import { mainFeedMaxAge } from "../posts/filters"
 import { redisClient } from "./connect"
 
-export const defaultDataFeedTTL = 60 * 10
-
-const postTTL=defaultDataFeedTTL
-export const postContentTTL = postTTL
-export const commentSectionTTL = postTTL
-export const userContentTTL = postTTL
-
-const userPersonalTTL = 60 * 60
-export const followSetTTL = userPersonalTTL
-export const postPersonalEngagementsTTL = userPersonalTTL
-export const userEngagementHistoryTTL = userPersonalTTL
+export const defaultDataFeedTTL = 60 * 30
+export const postTTL=defaultDataFeedTTL
+export const userTTL = postTTL
+export const userPersonalTTL = 60 * 60
 
 export function getMainFeedTTL(createdAt: Date, minimumTTL: number) {
     const ageMs = new Date().getTime() - new Date(createdAt).getTime()

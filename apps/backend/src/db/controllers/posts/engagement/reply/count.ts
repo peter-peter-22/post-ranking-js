@@ -2,7 +2,7 @@ import { aliasedTable, eq } from "drizzle-orm";
 import { db } from "../../../..";
 import { redisClient } from "../../../../../redis/connect";
 import { posts } from "../../../../schema/posts";
-import { postContentRedisKey } from "../../../../../redis/postContent/read";
+import { postContentRedisKey } from "../../../../../redis/postContent";
 
 export const postsToUpdate = aliasedTable(posts, "selected_posts")
 

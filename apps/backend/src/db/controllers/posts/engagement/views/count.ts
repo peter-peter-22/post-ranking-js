@@ -3,7 +3,7 @@ import { db } from "../../../..";
 import { redisClient } from "../../../../../redis/connect";
 import { posts } from "../../../../schema/posts";
 import { views } from "../../../../schema/views";
-import { postContentRedisKey } from "../../../../../redis/postContent/read";
+import { postContentRedisKey } from "../../../../../redis/postContent";
 
 /**Recalculate the view count of a post. */
 export async function updateViewCounts(postId: string) {

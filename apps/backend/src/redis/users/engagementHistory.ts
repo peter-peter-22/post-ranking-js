@@ -25,7 +25,7 @@ export const cachedEngagementHistoryRead = async (viewerId: string, posterIds: s
         schema,
         getKey: getKey(viewerId),
         getTTL: getTTL,
-        fallback: async (posterIds: string[]) => await db
+        generate: async (posterIds: string[]) => await db
             .select()
             .from(engagementHistory)
             .where(and(
