@@ -1,16 +1,34 @@
 import { redisClient } from '../connect';
 import { SchemaFieldTypes } from 'redis';
+import { createIndexIfNotExists } from './schemaTools';
 
 export async function initializeRedisSearch() {
 
-  // comment section ranking
-  await redisClient.ft.create('replies', {
-    '$.replyingTo': { type: SchemaFieldTypes.TAG, AS: 'replyingTo' },
-    '$.userId': { type: SchemaFieldTypes.TAG, AS: 'userId' },
-    '$.createdIt': { type: SchemaFieldTypes.NUMERIC, AS: 'createdIt', SORTABLE: true },
-  }, {
-    ON: 'HASH',       // Index Hashes
-    PREFIX: ['post:', 'content:']   // Only index keys starting with "post:"
-  });
+  // posts
+  await createIndexIfNotExists("posts",
+    async (name) => {
+      await redisClient.ft.create(name, {
+        replyingTo: { type: SchemaFieldTypes.TAG },
+        userId: { type: SchemaFieldTypes.TAG },
+        createdAt: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+      }, {
+        ON: 'HASH',
+        PREFIX: ['post:']
+      });
+    }
+  )
 
+  // users
+  await createIndexIfNotExists("users",
+    async (name) => {
+      await redisClient.ft.create(name, {
+        handle: { type: SchemaFieldTypes.TAG },
+      }, {
+        ON: 'HASH',
+        PREFIX: ['user:']
+      });
+    }
+  )
+
+  console.log("Redis inexes created")
 }

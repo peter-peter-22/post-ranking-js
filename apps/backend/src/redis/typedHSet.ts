@@ -1,3 +1,5 @@
+import { SearchReply } from "redis"
+
 type FieldType = "string" | "number" | "boolean" | "date" | "json"
 
 const nullSerizalized = "__NULL__"
@@ -15,7 +17,7 @@ function deserializeField(value: string | undefined, fieldType: FieldType) {
         case "json":
             return JSON.parse(value)
         case "date":
-            return new Date(value)
+            return new Date(parseInt(value))
         default:
             throw new Error(`Unknown field type ${fieldType}`)
     }
@@ -39,7 +41,8 @@ function serializeField(value: any, fieldType: FieldType): string | undefined {
             return JSON.stringify(value)
         case "date":
             if (!(value instanceof Date)) throw new Error("Invalid date")
-            return value.toISOString()
+            // Serialize timestamp to make it sortable
+            return value.getTime().toString()
         default:
             throw new Error(`Unknown field type ${fieldType}`)
     }
@@ -61,6 +64,10 @@ export function typedHSet<T extends HSetValue>(schema: HSetSchema) {
     }
 
     const serialize = (data: T): Record<string, string> => {
+        return serializePartial(data)
+    }
+
+    const serializePartial = (data: Partial<T>): Record<string, string> => {
         const result: Record<string, string> = {}
         Object.entries(schema).map(
             ([key, fieldType]) => {
@@ -73,7 +80,12 @@ export function typedHSet<T extends HSetValue>(schema: HSetSchema) {
         return result
     }
 
-    return { serialize, deserialize }
+    const parseSearch = (searchResult: SearchReply): T[] => {
+        return searchResult.documents.map(({ value }) => deserialize(value as Record<string, string>))
+    }
+
+
+    return { serialize, deserialize, parseSearch, serializePartial }
 }
 
-export type TypedHSetHandler<TData extends HSetValue>=ReturnType<typeof typedHSet<TData>>
+export type TypedHSetHandler<TData extends HSetValue> = ReturnType<typeof typedHSet<TData>>

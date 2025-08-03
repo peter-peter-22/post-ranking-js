@@ -1,13 +1,14 @@
+import { cachedPosts } from ".";
 import { Post } from "../../db/schema/posts";
 import { User } from "../../db/schema/users";
 import { PersonalPost } from "../../posts/hydratePosts";
+import { postProcessPosts } from "../../posts/postProcessPosts";
 import { cosineSimilarity } from "../../utilities/arrays/cosineSimilarity";
 import { removeUndefinedMapValues } from "../../utilities/arrays/removeUndefinedMapValues";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
-import { getFollowedReplierCounts } from "./replies";
-import { cachedEngagementHistoryRead } from "../users/engagementHistory";
+import { cachedEngagementHistory } from "../users/engagementHistory";
 import { getEnrichedUsers } from "../users/enrich";
-import { cachedPostRead } from ".";
+import { getFollowedReplierCounts } from "./replies";
 
 export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
     // Format 
@@ -24,7 +25,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedEngagementHistoryRead(viewerId, [...userIds]) : undefined,
+        viewerId ? cachedEngagementHistory(viewerId).read([...userIds]) : undefined,
         viewerId ? getFollowedReplierCounts(viewerId, [...posts.values()]) : undefined
     ])
     // Aggregate
@@ -65,14 +66,18 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
             embeddingText: post.embeddingText,
         }
     })
-    return enrichedPosts
+    return postProcessPosts(enrichedPosts)
 }
 
 export async function getEnrichedPosts(ids: string[], viewer?: User) {
     return await enrichPosts(
         removeUndefinedMapValues(
-            await cachedPostRead(ids)
+            await cachedPosts.read(ids)
         ),
         viewer
     )
 }
+
+export function postArrayToMap<T extends { id: string }>(posts: T[]): Map<string, T> {
+    return new Map(posts.map(post => [post.id, post]))
+} 

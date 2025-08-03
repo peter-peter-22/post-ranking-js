@@ -1,11 +1,11 @@
 import { PersonalUser } from "../../db/controllers/users/getUser";
 import { cachedFollowStatus } from "./follows";
-import { cachedUsersRead } from "./read";
+import { cachedUsers } from "./read";
 
 export async function getEnrichedUsers(ids: string[], viewerId?: string) {
     // Get
     const [users, follows] = await Promise.all([
-        cachedUsersRead.read(ids),
+        cachedUsers.read(ids),
         viewerId ? cachedFollowStatus(viewerId, ids) : undefined
     ])
     // Aggregate

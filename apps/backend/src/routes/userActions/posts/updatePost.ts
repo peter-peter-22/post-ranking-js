@@ -7,10 +7,11 @@ import { updateMedia } from '../../../db/controllers/pendingUploads/updateMedia'
 import { posts } from '../../../db/schema/posts';
 import { HttpError } from '../../../middlewares/errorHandler';
 import { personalizePosts } from '../../../posts/hydratePosts';
+import { redisClient } from '../../../redis/connect';
+import { cachedPosts } from '../../../redis/postContent';
 import { prepareAnyPost } from '../../../userActions/posts/preparePost';
 import { getOnePost } from '../../getPost';
 import { createPostSchema } from './createPost';
-import { cachedPostWrite } from '../../../redis/postContent';
 
 const router = Router();
 
@@ -47,7 +48,12 @@ router.post('/', async (req: Request, res: Response) => {
         .where(eq(posts.id, post.id))
         .returning()
     // Update cache
-    await cachedPostWrite.write([updatedPost])
+    const multi = redisClient.multi()
+    cachedPosts.update([{
+        key: id,
+        values: valuesToUpdate
+    }], multi)
+    await multi.exec()
     // Format the post to the standard format
     const [personalPost] = await personalizePosts(getOnePost(updatedPost.id), user)
     // Return updated posts

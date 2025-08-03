@@ -5,21 +5,21 @@ import { db } from '../../db';
 import { posts } from '../../db/schema/posts';
 import { users } from '../../db/schema/users';
 import { getEnrichedPosts } from '../../redis/postContent/enrich';
-import { cachedPostRead } from '../../redis/postContent';
+import { cachedPosts } from '../../redis/postContent';
 import { getEnrichedUsers } from '../../redis/users/enrich';
-import { cachedUsersRead } from '../../redis/users/read';
+import { cachedUsers } from '../../redis/users/read';
 
 const router = Router();
 
 router.get('/readPosts', async (req: Request, res: Response) => {
     const testIds = await db.select({ id: posts.id }).from(posts).orderBy(desc(posts.createdAt)).limit(10)
-    const data = await cachedPostRead.read(testIds.map(t => t.id))
+    const data = await cachedPosts.read(testIds.map(t => t.id))
     res.json({ data: [...data] })
 });
 
 router.get('/readUsers', async (req: Request, res: Response) => {
     const testIds = await db.select({ id: users.id }).from(users).orderBy(desc(users.createdAt)).limit(10)
-    const data = await cachedUsersRead.read(testIds.map(t => t.id))
+    const data = await cachedUsers.read(testIds.map(t => t.id))
     res.json({ data: [...data] })
 });
 

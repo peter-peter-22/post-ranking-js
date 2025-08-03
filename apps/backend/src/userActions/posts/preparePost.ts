@@ -6,7 +6,7 @@ import { generateEmbeddingVectors } from "../../db/controllers/embedding";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { HttpError } from "../../middlewares/errorHandler";
 import { normalizeVector } from "../../utilities/arrays/normalize";
-import { cachedPostRead } from "../../redis/postContent";
+import { cachedPosts } from "../../redis/postContent";
 
 /** Bulk prepare posts before insert. */
 export async function preparePosts(data: PostToInsert[]) {
@@ -57,7 +57,7 @@ function processPostText(post: PostToInsert) {
 export async function prepareReply(post: PostToInsert) {
     processPostText(post)
     if (!post.replyingTo) throw new HttpError(422, "Invalid reply.")
-    const [repliedPost] = [...(await cachedPostRead.read([post.replyingTo])).values()]
+    const repliedPost=await cachedPosts.readSingle(post.replyingTo)
     if (!repliedPost) throw new HttpError(404, "The replied post does not exists.")
     post.repliedUser = repliedPost.userId
     return { post, replied: repliedPost }

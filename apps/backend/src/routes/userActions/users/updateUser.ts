@@ -11,7 +11,13 @@ router.post('/', async (req: Request, res: Response) => {
     // Get user
     const user = await authRequestStrict(req)
     // Update
-    const updatedUser = await userActions.users.update(user, newUser)
+    const updatedUser = await userActions.users.update(user, {
+        name: newUser.name,
+        handle: newUser.handle,
+        bio: newUser.bio,
+        avatar: newUser.profileMedia ? newUser.profileMedia : null,
+        banner: newUser.bannerMedia ? newUser.bannerMedia : null
+    })
     // Return updated user
     res.status(201).json({ user: updatedUser } as UpdateUserResponse)
 });

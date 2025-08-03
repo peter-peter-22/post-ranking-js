@@ -1,12 +1,10 @@
 import { inArray } from "drizzle-orm"
+import { cachedPostWrite } from "."
 import { db } from "../../db"
 import { Post, posts } from "../../db/schema/posts"
-import { redisClient } from "../connect"
-import { userFollowListRedisKey } from "../users/follows"
-import { cachedPostWrite } from "."
-import { RedisModules } from "redis"
 import { getMainFeedTTL, postTTL, RedisMulti } from "../common"
-import { getMainFeed } from "../../posts/forYou"
+import { redisClient } from "../connect"
+import { userFollowingRedisKey } from "../users/follows"
 
 export function repliersRedisKey(postId: string) {
     return `post:${postId}:replies:users`
@@ -18,7 +16,7 @@ export function repliersRedisKey(postId: string) {
 export async function getFollowedReplierCounts(userId: string, targetPosts: Post[]) {
     const multi = redisClient.multi()
     for (const post of targetPosts) {
-        multi.sInterCard([repliersRedisKey(post.id), userFollowListRedisKey(userId)])
+        multi.sInterCard([repliersRedisKey(post.id), userFollowingRedisKey(userId)])
     }
     return await multi.exec() as number[]
 }

@@ -1,8 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { engagementHistory, EngagementHistory } from "../../db/schema/engagementHistory";
-import { cachedBulkHSetRead, cachedBulkHSetWrite } from "../bulkHSetRead";
-import { userEngagementHistoryTTL } from "../common";
+import { cachedHset } from "../bulkHSetRead";
 import { typedHSet } from "../typedHSet";
 import { redisClient } from "../connect";
 import { engagementHistoryJobs } from "../jobs/categories/engagementHistory";
@@ -17,14 +16,12 @@ const schema = typedHSet<EngagementHistory>({
     viewerId: "string",
     publisherId: "string",
 })
-const getTTL = () => userEngagementHistoryTTL
 const getKey = (viewerId: string) => (posterId: string) => userEngagementHistoryRedisKey(viewerId, posterId)
 
-export const cachedEngagementHistoryRead = async (viewerId: string, posterIds: string[]) => {
-    return await cachedBulkHSetRead<EngagementHistory>({
+export const cachedEngagementHistory = (viewerId: string) => {
+    return cachedHset<EngagementHistory>({
         schema,
         getKey: getKey(viewerId),
-        getTTL: getTTL,
         generate: async (posterIds: string[]) => await db
             .select()
             .from(engagementHistory)
@@ -33,23 +30,12 @@ export const cachedEngagementHistoryRead = async (viewerId: string, posterIds: s
                 inArray(engagementHistory.publisherId, posterIds)
             )),
         getId: (value: EngagementHistory) => value.publisherId,
-        defaultValue:(publisherId:string)=>({viewerId,publisherId,likes:0,replies:0,clicks:0})
     })
-        .read(posterIds)
-}
-
-export const cachedEngagementHistoryWrite = async (viewerId: string, values: EngagementHistory[]) => {
-    return await cachedBulkHSetWrite<EngagementHistory>({
-        schema,
-        getKey: getKey(viewerId),
-        getTTL: getTTL
-    })
-        .write(values)
 }
 
 export const updateEngagementHistory = async (viewerId: string, updates: { posterId: string, addLikes?: number, addClicks?: number, addReplies?: number }[]) => {
     // Ensure the cache is loaded before the increment happens
-    await cachedEngagementHistoryRead(viewerId, updates.map(e => e.posterId))
+    await cachedEngagementHistory(viewerId).read(updates.map(e => e.posterId))
     // Increment
     const multi = redisClient.multi()
     for (const { posterId, addLikes, addClicks, addReplies } of updates) {

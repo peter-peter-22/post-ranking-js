@@ -1,15 +1,14 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { User, users } from "../../db/schema/users";
-import { cachedBulkHSetRead, cachedBulkHSetWrite } from "../bulkHSetRead";
-import { userTTL } from "../common";
+import { cachedHset } from "../bulkHSetRead";
 import { typedHSet } from "../typedHSet";
+import { redisClient } from "../connect";
+import { userTTL } from "../common";
 
 export function userContentRedisKey(id: string) {
     return `user:${id}:content`;
 }
-
-const getTTL = () => userTTL
 
 const schema = typedHSet<User>({
     id: "string",
@@ -29,16 +28,19 @@ const schema = typedHSet<User>({
     bio: "string"
 })
 
-export const cachedUsersRead = cachedBulkHSetRead<User>({
+export const cachedUsers = cachedHset<User>({
     schema,
-    getTTL,
     getKey: userContentRedisKey,
-    generate: async (ids: string[]) => await db.select().from(users).where(inArray(users.id, ids)),
+    generate: async (ids: string[], { schema }) => {
+        const newUsers = await db.select().from(users).where(inArray(users.id, ids))
+        const multi = redisClient.multi()
+        for (const user of newUsers) {
+            const key = userContentRedisKey(user.id)
+            multi.hSet(key, schema.serialize(user))
+            multi.expire(key, userTTL)
+        }
+        await multi.exec()
+        return newUsers
+    },
     getId: (user: User) => user.id
-})
-
-export const cachedUsersWrite = cachedBulkHSetWrite<User>({
-    schema,
-    getTTL,
-    getKey: userContentRedisKey,
 })

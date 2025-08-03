@@ -1,6 +1,6 @@
 import { getTrendNames } from "../../db/controllers/trends/getTrends";
 import { User } from "../../db/schema/users";
-import { DatePageParams, deduplicatePosts, mergePostArrays } from "../common";
+import { DatePageParams, deduplicatePersonalPosts, mergePostArrays } from "../common";
 import { rankPosts } from "../ranker";
 import { ESimPageParams, getEmbeddingSimilarityCandidates } from "./candidates/embedding";
 import { getFollowedCandidates } from "./candidates/followed";
@@ -34,7 +34,7 @@ export async function getMainFeed({ user, pageParams, offset }: { user: User, pa
     // Exit if no posts
     if (allPosts.length === 0) return
     // Deduplicate
-    allPosts = deduplicatePosts(allPosts)
+    allPosts = deduplicatePersonalPosts(allPosts)
     // Merge page params
     const allPageParams: ForYouPageParams = {
         followed: followedPosts?.pageParams,

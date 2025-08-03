@@ -1,5 +1,6 @@
 import { mainFeedMaxAge } from "../posts/filters"
 import { redisClient } from "./connect"
+import { initializeRedisSearch } from "./search/schema"
 
 export const defaultDataFeedTTL = 60 * 30
 export const postTTL=defaultDataFeedTTL
@@ -18,3 +19,9 @@ export type ZSetEntry = {
     value: string,
     score: number
 }
+
+export function escapeTagValue(value: string): string {
+    return value.replace(/([,\.\<\>\{\}\[\]\"\':;!@#\$%\^\&\*\(\)\-\+\=~])/g, '\\$1');
+}
+
+await initializeRedisSearch()

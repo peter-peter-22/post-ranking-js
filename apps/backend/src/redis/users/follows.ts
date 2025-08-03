@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm"
 import { db } from "../../db"
 import { Follow, follows } from "../../db/schema/follows"
-import { followSetTTL } from "../common"
 import { redisClient } from "../connect"
 import { createPersistentSet } from "../persistentSet"
 import { userContentRedisKey } from "./read"
@@ -10,8 +9,9 @@ import { jobQueue } from "../jobs/queue"
 import { followerCountJobs } from "../jobs/categories/followerCount"
 import { followingCountJobs } from "../jobs/categories/followingCount"
 import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
+import { userTTL } from "../common"
 
-export function userFollowListRedisKey(id: string) {
+export function userFollowingRedisKey(id: string) {
     return `user:${id}:following`
 }
 
@@ -19,10 +19,10 @@ export async function cachedFollowStatus(userId: string, targetUserIds: string[]
     if (targetUserIds.length === 0) return new Set<string>()
 
     // try redis
-    const key = userFollowListRedisKey(userId)
+    const key = userFollowingRedisKey(userId)
     const multi = redisClient.multi()
     multi.exists(key)
-    multi.expire(key, followSetTTL)
+    multi.expire(key, userTTL)
     for (const targetUserId of targetUserIds) {
         multi.sIsMember(key, targetUserId)
     }
@@ -43,7 +43,7 @@ export async function cachedFollowStatus(userId: string, targetUserIds: string[]
     const ids = allFollows.map(f => f.followedId)
     await redisClient.multi()
         .sAdd(key, createPersistentSet(ids))
-        .expire(key, followSetTTL)
+        .expire(key, userTTL)
         .exec()
     return new Set<string>(ids)
 }
@@ -70,10 +70,13 @@ export async function setCachedFollow(followerId: string, followedId: string, va
 
 async function handleFollowChange(updated: Follow, value: boolean) {
     const add = value ? 1 : -1
+    const multi = redisClient.multi()
+    multi.hIncrBy(userContentRedisKey(updated.followedId), "followerCount", add)
+    multi.hIncrBy(userContentRedisKey(updated.followerId), "followingCount", add)
+    if (add) multi.sAdd(userFollowingRedisKey(updated.followerId), updated.followedId)
+    else multi.sRem(userFollowingRedisKey(updated.followerId), updated.followedId)
     await Promise.all([
-        redisClient.multi()
-            .hIncrBy(userContentRedisKey(updated.followedId), "followerCount", add)
-            .hIncrBy(userContentRedisKey(updated.followerId), "followingCount", add),
+        multi.exec(),
         jobQueue.addBulk([
             followerCountJobs.returnJob({ data: updated.followedId }),
             followingCountJobs.returnJob({ data: updated.followerId })

@@ -1,7 +1,8 @@
+import { RedisMulti } from "./common";
 import { redisClient } from "./connect";
 import { HSetValue, TypedHSetHandler } from "./typedHSet";
 
-export function cachedBulkHSetRead<T extends HSetValue>({
+export function cachedHset<T extends HSetValue>({
     schema,
     getKey,
     generate,
@@ -10,9 +11,15 @@ export function cachedBulkHSetRead<T extends HSetValue>({
     schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
     getId: (value: T) => string,
-    generate: (ids: string[],schema: TypedHSetHandler<T>) => Promise<T[]>,
+    generate: (ids: string[], ctx: { schema: TypedHSetHandler<T>, write: (values: T[], multi: RedisMulti) => Promise<void> }) => Promise<T[]>,
 }) {
-    const fetch = async (ids: string[]) => {
+    const write = async (values: T[], multi: RedisMulti) => {
+        for (const value of values) {
+            multi.hSet(getKey(getId(value)), schema.serialize(value))
+        }
+    }
+
+    const read = async (ids: string[]) => {
         if (ids.length === 0) return new Map<string, T | undefined>()
         // Try to read from redis
         let multi = redisClient.multi()
@@ -39,7 +46,7 @@ export function cachedBulkHSetRead<T extends HSetValue>({
         console.log(`Hset cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
         if (missingIds.length > 0) {
             // Fetch the missing values from the db
-            const newData = await generate(missingIds,schema)
+            const newData = await generate(missingIds, { schema, write })
             const dataMap = new Map<string, T>(newData.map(row => [getId(row), row]))
             // Add to the results
             for (const id of missingIds) {
@@ -50,5 +57,19 @@ export function cachedBulkHSetRead<T extends HSetValue>({
         return resultMap
     }
 
-    return { read: fetch }
+    const readAsArray = async (ids: string[]) => {
+        return [...(await read(ids)).values()]
+    }
+
+    const readSingle = async (id: string) => {
+        return (await readAsArray([id]))[0]
+    }
+
+    const update = async (updates: { key: string, values: Partial<T> }[], multi: RedisMulti) => {
+        for (const { key, values } of updates) {
+            multi.hSet(key, schema.serializePartial(values))
+        }
+    }
+
+    return { read, readAsArray, readSingle, write, update }
 }

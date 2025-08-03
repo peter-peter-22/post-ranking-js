@@ -1,17 +1,17 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
 import { Post, posts } from "../../db/schema/posts";
-import { cachedBulkHSetRead } from "../bulkHSetRead";
+import { cachedHset } from "../bulkHSetRead";
 import { getMainFeedTTL, postTTL, RedisMulti } from "../common";
 import { redisClient } from "../connect";
 import { typedHSet } from "../typedHSet";
-import { cachedReplyWrite, getReplies, repliersRedisKey } from "./replies";
+import { cachedReplyWrite, getReplies } from "./replies";
 
 export function postContentRedisKey(id: string) {
     return `post:${id}:content`;
 }
 
-const schema = typedHSet<Post>({
+export const postHsetSchema = typedHSet<Post>({
     id: "string",
     userId: "string",
     text: "string",
@@ -40,17 +40,18 @@ const schema = typedHSet<Post>({
 })
 const getKey = postContentRedisKey
 
-export const cachedPostRead = cachedBulkHSetRead<Post>({
-    schema,
+export const cachedPosts = cachedHset<Post>({
+    schema: postHsetSchema,
     getKey,
     generate: generatePostCache,
     getId: (post: Post) => post.id
-}).read
+})
 
+// TODO replace this
 export const cachedPostWrite = (posts: Post[], multi: RedisMulti, ttl?: number) => {
     for (const post of posts) {
         const key = postContentRedisKey(post.id)
-        multi.hSet(key, schema.serialize(post));
+        multi.hSet(key, postHsetSchema.serialize(post));
         multi.expire(key, ttl ? ttl : getMainFeedTTL(post.createdAt, postTTL))
     }
 }
@@ -68,5 +69,6 @@ async function generatePostCache(postIds: string[]) {
         // Cache the replies
         if (myReplies) cachedReplyWrite(myReplies, post, multi)
     }
+    await multi.exec()
     return newPosts
 }
