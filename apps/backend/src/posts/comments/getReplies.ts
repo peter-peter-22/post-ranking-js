@@ -1,15 +1,15 @@
 import { SearchReply } from "redis"
 import { User } from "../../db/schema/users"
 import { HttpError } from "../../middlewares/errorHandler"
+import { escapeTagValue } from "../../redis/common"
 import { redisClient } from "../../redis/connect"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
 import { cachedPosts, postHsetSchema } from "../../redis/postContent"
 import { enrichPosts, postArrayToMap } from "../../redis/postContent/enrich"
 import { repliersRedisKey } from "../../redis/postContent/replies"
-import { cachedFollowStatus, userFollowingRedisKey } from "../../redis/users/follows"
+import { userFollowingRedisKey } from "../../redis/users/follows"
 import { deduplicatePosts, SingleDatePageParams } from "../common"
 import { PersonalPost } from "../hydratePosts"
-import { escapeTagValue } from "../../redis/common"
 
 export type CommentsPageParams = {
     latest?: SingleDatePageParams
@@ -17,13 +17,10 @@ export type CommentsPageParams = {
 
 export async function getReplies({ user, pageParams, offset, postId }: { user: User, pageParams?: CommentsPageParams, offset: number, postId: string }) {
     // Get the main post and metadata
-    await cachedFollowStatus(user.id, [user.id])
     const [post, followedRepliers] = await Promise.all([
         cachedPosts.readSingle(postId),
         redisClient.sInter([repliersRedisKey(postId), userFollowingRedisKey(user.id)]),
     ])
-    console.log(await redisClient.sMembers(repliersRedisKey(postId)))
-    console.log(await redisClient.sMembers(userFollowingRedisKey(user.id)))
 
     // Check if the post exists
     if (!post) throw new HttpError(404, 'Post not found')
@@ -53,7 +50,6 @@ export async function getReplies({ user, pageParams, offset, postId }: { user: U
             `@replyingTo:{${escapeTagValue(post.id)}} @userId:{${escapeTagValue(post.userId)}}`,
         );
         // Replies of followed users
-        console.log(escapeTagValue(post.id))
         for (const followed of followedRepliers)
             multi.ft.search(
                 'posts',

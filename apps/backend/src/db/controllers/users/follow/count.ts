@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../..";
 import { redisClient } from "../../../../redis/connect";
-import { userContentRedisKey } from "../../../../redis/users/read";
+import { userContentRedisKey } from "../../../../redis/users";
 import { follows } from "../../../schema/follows";
 import { users } from "../../../schema/users";
 

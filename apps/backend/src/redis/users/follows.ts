@@ -1,53 +1,30 @@
 import { and, eq } from "drizzle-orm"
+import { userContentRedisKey } from "."
 import { db } from "../../db"
+import { createFollowNotification } from "../../db/controllers/notifications/createNotification"
+import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
 import { Follow, follows } from "../../db/schema/follows"
 import { redisClient } from "../connect"
-import { createPersistentSet } from "../persistentSet"
-import { userContentRedisKey } from "./read"
-import { createFollowNotification } from "../../db/controllers/notifications/createNotification"
-import { jobQueue } from "../jobs/queue"
 import { followerCountJobs } from "../jobs/categories/followerCount"
 import { followingCountJobs } from "../jobs/categories/followingCount"
-import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
-import { userTTL } from "../common"
+import { jobQueue } from "../jobs/queue"
+import { RedisMulti } from "../common"
 
 export function userFollowingRedisKey(id: string) {
     return `user:${id}:following`
 }
 
-export async function cachedFollowStatus(userId: string, targetUserIds: string[]) {
-    if (targetUserIds.length === 0) return new Set<string>()
-
-    // try redis
+/** Get which user ids are followed by a user.
+ ** Does not checks cache exitence.
+ */
+export async function cachedFollowStatus(userId: string, targetUserIds: string[], multi: RedisMulti) {
     const key = userFollowingRedisKey(userId)
-    const multi = redisClient.multi()
-    multi.exists(key)
-    multi.expire(key, userTTL)
-    for (const targetUserId of targetUserIds) {
-        multi.sIsMember(key, targetUserId)
-    }
-    const [exists, _, ...results] = await multi.exec()
-    console.log("Follow list cache hit: " + (exists ? "yes" : "no"))
-    if (exists) {
-        const followed = new Set<string>()
-        for (let n = 0; n < targetUserIds.length; n++) {
-            const id = targetUserIds[n]
-            const value = results[n]
-            if (value) followed.add(id)
-        }
-        return followed
-    }
-
-    // if no data, fetch from db and set redis
-    const allFollows = await db.select().from(follows).where(eq(follows.followerId, userId))
-    const ids = allFollows.map(f => f.followedId)
-    await redisClient.multi()
-        .sAdd(key, createPersistentSet(ids))
-        .expire(key, userTTL)
-        .exec()
-    return new Set<string>(ids)
+    multi.smIsMember(key, targetUserIds)
 }
 
+/** Set cached data after a follow happens.
+ ** Both the followed and the follower must be cached before calling.
+ */
 export async function setCachedFollow(followerId: string, followedId: string, value: boolean) {
     const [updated] = value ? (
         await db.insert(follows)

@@ -7,7 +7,7 @@ import { users } from '../../db/schema/users';
 import { getEnrichedPosts } from '../../redis/postContent/enrich';
 import { cachedPosts } from '../../redis/postContent';
 import { getEnrichedUsers } from '../../redis/users/enrich';
-import { cachedUsers } from '../../redis/users/read';
+import { cachedUsers } from '../../redis/users';
 
 const router = Router();
 

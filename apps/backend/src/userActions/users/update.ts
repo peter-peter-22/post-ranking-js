@@ -4,7 +4,7 @@ import { db } from "../../db"
 import { updateMedia } from "../../db/controllers/pendingUploads/updateMedia"
 import { User, userColumns, users } from "../../db/schema/users"
 import { redisClient } from "../../redis/connect"
-import { cachedUsers } from "../../redis/users/read"
+import { cachedUsers } from "../../redis/users"
 
 export async function updateUser(user: User, update: Partial<User>) {
     // Update the media of the user

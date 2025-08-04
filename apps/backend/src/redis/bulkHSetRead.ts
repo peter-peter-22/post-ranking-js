@@ -11,13 +11,8 @@ export function cachedHset<T extends HSetValue>({
     schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
     getId: (value: T) => string,
-    generate: (ids: string[], ctx: { schema: TypedHSetHandler<T>, write: (values: T[], multi: RedisMulti) => Promise<void> }) => Promise<T[]>,
+    generate: (ids: string[], schema: TypedHSetHandler<T>) => Promise<T[]>,
 }) {
-    const write = async (values: T[], multi: RedisMulti) => {
-        for (const value of values) {
-            multi.hSet(getKey(getId(value)), schema.serialize(value))
-        }
-    }
 
     const read = async (ids: string[]) => {
         if (ids.length === 0) return new Map<string, T | undefined>()
@@ -46,7 +41,7 @@ export function cachedHset<T extends HSetValue>({
         console.log(`Hset cache hit: ${ids.length - missingIds.length}, cache miss: ${missingIds.length}, total: ${ids.length}`)
         if (missingIds.length > 0) {
             // Fetch the missing values from the db
-            const newData = await generate(missingIds, { schema, write })
+            const newData = await generate(missingIds, schema)
             const dataMap = new Map<string, T>(newData.map(row => [getId(row), row]))
             // Add to the results
             for (const id of missingIds) {
@@ -71,5 +66,5 @@ export function cachedHset<T extends HSetValue>({
         }
     }
 
-    return { read, readAsArray, readSingle, write, update }
+    return { read, readAsArray, readSingle, update }
 }

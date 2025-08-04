@@ -47,7 +47,7 @@ export const cachedPosts = cachedHset<Post>({
     getId: (post: Post) => post.id
 })
 
-// TODO replace this
+/** Write post to redis with ttl. */
 export const cachedPostWrite = (posts: Post[], multi: RedisMulti, ttl?: number) => {
     for (const post of posts) {
         const key = postContentRedisKey(post.id)

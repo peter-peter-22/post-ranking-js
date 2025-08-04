@@ -1,5 +1,5 @@
 import { inArray } from "drizzle-orm"
-import { cachedPostWrite } from "."
+import { cachedPosts, cachedPostWrite } from "."
 import { db } from "../../db"
 import { Post, posts } from "../../db/schema/posts"
 import { getMainFeedTTL, postTTL, RedisMulti } from "../common"
