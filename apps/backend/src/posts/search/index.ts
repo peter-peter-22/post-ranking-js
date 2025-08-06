@@ -2,8 +2,8 @@ import { desc, lt } from "drizzle-orm"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
+import { enrichPosts, postArrayToMap } from "../../redis/postContent/enrich"
 import { SingleDatePageParams } from "../common"
-import { personalizePosts } from "../hydratePosts"
 import { postSearchQuery } from "./postSearchQuery"
 
 export async function searchLatestPosts({
@@ -28,17 +28,18 @@ export async function searchLatestPosts({
         filter: pageParams && lt(posts.createdAt, new Date(pageParams.maxDate))
     })
         .orderBy(desc(posts.createdAt))
+    const fetchedPosts = await q;
 
-    // Fetch
-    const myPosts = await personalizePosts(q, user)
+    // Enrich
+    const enrichedPosts = await enrichPosts(postArrayToMap(fetchedPosts), user)
 
     // Get next page params
-    const nextPageParams: SingleDatePageParams | undefined = myPosts.length === postsPerRequest ? {
-        maxDate: myPosts[myPosts.length - 1].createdAt.toISOString()
+    const nextPageParams: SingleDatePageParams | undefined = enrichedPosts.length === postsPerRequest ? {
+        maxDate: enrichedPosts[enrichedPosts.length - 1].createdAt.toISOString()
     } : undefined
 
     // Return the ranked posts and the page params
-    return { data: myPosts, pageParams: nextPageParams }
+    return { data: enrichedPosts, pageParams: nextPageParams }
 }
 
 export type TopPostsPageParam = {
@@ -67,15 +68,16 @@ export async function searchTopPosts({
         filter: pageParams && lt(posts.createdAt, new Date(pageParams.maxEngagements))
     })
         .orderBy(desc(posts.engagementCount))
+    const fetchedPosts = await q
 
-    // Fetch
-    const myPosts = await personalizePosts(q, user)
+    // Enrich
+    const enrichedPosts = await enrichPosts(postArrayToMap(fetchedPosts), user)
 
     // Get next page params
-    const nextPageParams: TopPostsPageParam | undefined = myPosts.length === postsPerRequest ? {
-        maxEngagements: myPosts[myPosts.length - 1].engagementCount
+    const nextPageParams: TopPostsPageParam | undefined = fetchedPosts.length === postsPerRequest ? {
+        maxEngagements: fetchedPosts[fetchedPosts.length - 1].likeCount
     } : undefined
 
     // Return the ranked posts and the page params
-    return { data: myPosts, pageParams: nextPageParams }
+    return { data: enrichedPosts, pageParams: nextPageParams }
 }

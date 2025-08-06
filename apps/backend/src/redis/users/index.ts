@@ -1,6 +1,6 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
-import { loadAggregatedEngagementHistory, loadCurrentEngagementHistory } from "../../db/controllers/engagementHistory/update";
+import { loadAggregatedEngagementHistory, loadCurrentEngagementHistory } from "../../db/controllers/engagementHistory/load";
 import { follows } from "../../db/schema/follows";
 import { User, users } from "../../db/schema/users";
 import { cachedHset } from "../bulkHSetRead";

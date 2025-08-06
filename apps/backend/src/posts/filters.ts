@@ -21,17 +21,3 @@ export const mainFeedMaxAge = 1000 * 60 * 60 * 24 * 2  // 2 days
 export const maxDate = () => {
     return new Date(Date.now() - mainFeedMaxAge)
 }
-
-/** Filter out the posts those are older than 2 days */
-export const recencyFilter = () => {
-    const maxAgeDate = maxDate()
-    return gt(posts.createdAt, maxAgeDate)
-}
-
-/** Skip the posts those are already displayed */
-export const notDisplayed = (skipIds: string[] = []) => notInArray(posts.id, skipIds)
-
-/** Get the replies of a post. */
-export const replyOfPost = (postId: string) => {
-    return eq(posts.replyingTo, postId)
-}

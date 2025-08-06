@@ -1,10 +1,10 @@
-import { and, eq, lt, SQL, sql } from "drizzle-orm"
+import { and, eq, SQL, sql } from "drizzle-orm"
 import { db } from "../../db"
 import { posts } from "../../db/schema/posts"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
-import { candidateColumns } from "../common"
 import { noPending } from "../filters"
 
+/** Query to full text search posts. */
 export function postSearchQuery({
     text,
     filterUserHandle,
@@ -14,9 +14,8 @@ export function postSearchQuery({
     filterUserHandle?: string,
     filter?: SQL
 }) {
-    // Query
     const q = db
-        .select(candidateColumns("Unknown"))
+        .select()
         .from(posts)
         .where(and(
             noPending(),

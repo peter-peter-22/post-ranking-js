@@ -1,4 +1,4 @@
-import { PersonalPost } from "./hydratePosts";
+import { PersonalPost } from "@me/schemas/src/zod/post"
 
 /** Apply changes to the fetched posts before sending them to the client.
  ** Hide the contents of the deleted posts.

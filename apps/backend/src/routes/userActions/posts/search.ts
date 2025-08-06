@@ -3,11 +3,11 @@ import { URLSearchParams } from 'url';
 import { z } from 'zod';
 import { authRequestStrict } from '../../../authentication';
 import { BasicFeedSchema, SingleDatePageParams } from '../../../posts/common';
-import { PersonalPost } from '../../../posts/hydratePosts';
 import { searchLatestPosts, searchTopPosts, TopPostsPageParam } from '../../../posts/search';
 import { getPaginatedData } from '../../../redis/pagination';
 import { postFeedTTL } from '../../../redis/feeds/postFeeds/common';
 import { postProcessPosts } from '../../../posts/postProcessPosts';
+import { PersonalPost } from '@me/schemas/src/zod/post';
 
 const router = Router();
 

@@ -1,6 +1,11 @@
-replace all occurences of personalizepost and post process post
+replace all occurences of personalizepost and post process post and indexed lookup
 centralized cache ttl. notify-keyspace-events Ex
+remove all recalculations?
+do something with the snapshots
+cache notifications feed
+cache trend caclulation
 add the total engagement history of likers and commenters to posts. requirement: track likers in redis, implement aggregated engagement score
+apply changes to ranking params
 debloat cache?
 optimize media transfer
 remove pending posts

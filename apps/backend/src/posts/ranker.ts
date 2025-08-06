@@ -1,7 +1,7 @@
 import axios from "axios";
 import { z } from "zod";
 import { env } from "../zod/env";
-import { PersonalPost } from "./hydratePosts";
+import { PersonalPost } from "@me/schemas/src/zod/post";
 
 /** Axios instance to communicate with the ranker api */
 const rankerApi = axios.create({
@@ -34,17 +34,17 @@ export async function rankPosts(posts: PersonalPost[]): Promise<PersonalPost[]> 
             console.log("No posts to rank")
             return []
         }
-        // Format the posts for the ranker
+        // Format the posts for the ranker TODO update
         const rankerInputs: PostToRank[] = posts.map((post) => ({
             age: (Date.now() - post.createdAt.getTime()) / 1000 / 60 / 60, // age in hours
             like_count: post.likes,
             reply_count: post.replies,
             click_count: post.clicks,
             embedding_similarity: post.similarity,
-            like_history: post.engagementHistory?.likes || 0,
-            reply_history: post.engagementHistory?.replies || 0,
-            click_history: post.engagementHistory?.clicks || 0,
-            followed: post.user.followed,
+            like_history: 0,
+            reply_history: 0,
+            click_history: 0,
+            followed: false,
             replied_by_followed: post.repliedByFollowed
         }))
         // Fetch the post scores

@@ -1,4 +1,4 @@
-import { getDays } from "../../db/controllers/engagementHistory/update";
+import { getDays } from "../../db/controllers/engagementHistory/load";
 import { EngagementHistory } from "../../db/schema/engagementHistory";
 import { ProcessContext } from "../../userActions/posts/engagements/updates";
 import { redisClient } from "../connect";
@@ -23,7 +23,7 @@ export type EngagementCounts = Pick<Partial<EngagementHistory>, "likes" | "click
 
 export type EngagementUpdates = Required<EngagementCounts> & { publisherId: string }
 
-// TODO chain to update engagement context
+/** Increment engagement counts and update scores. */
 export const updateEngagementHistory = (viewerId: string, updates: EngagementUpdates[], { redis }: ProcessContext) => {
     // Get the edited time bucket
     const timeBucket = getDays()
@@ -40,8 +40,6 @@ export const updateEngagementHistory = (viewerId: string, updates: EngagementUpd
             publisherId
         )
     }
-    // Shedule update job
-    //await engagementHistoryJobs.addJob({ data: viewerId })
 }
 
 export async function getEngagementHistoryScores(viewerId: string, posterIds: string[]) {
