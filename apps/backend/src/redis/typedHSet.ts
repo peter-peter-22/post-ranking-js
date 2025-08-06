@@ -48,10 +48,10 @@ function serializeField(value: any, fieldType: FieldType): string | undefined {
     }
 }
 
-export type HSetSchema = { [key: string]: FieldType }
 export type HSetValue = { [key: string]: any }
+export type HSetSchema<T extends HSetValue> = { [K in keyof T]: FieldType }
 
-export function typedHSet<T extends HSetValue>(schema: HSetSchema) {
+export function typedHSet<T extends HSetValue>(schema: HSetSchema<T>) {
     const deserialize = (data: { [key: string]: string }): T => {
         return Object.fromEntries(
             Object.entries(schema).map(
