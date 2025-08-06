@@ -1,31 +1,32 @@
+import { PersonalPost } from "@me/schemas/src/zod/post";
 import { cachedPosts } from ".";
 import { Post } from "../../db/schema/posts";
 import { User } from "../../db/schema/users";
-import { PersonalPost } from "../../posts/hydratePosts";
 import { postProcessPosts } from "../../posts/postProcessPosts";
 import { cosineSimilarity } from "../../utilities/arrays/cosineSimilarity";
 import { removeUndefinedMapValues } from "../../utilities/arrays/removeUndefinedMapValues";
 import { cachedClicks, cachedLikes, cachedViews } from "../personalEngagements/instances";
-import { cachedEngagementHistory } from "../users/engagementHistory";
+import { getEngagementHistoryScores } from "../users/engagementHistory";
 import { getEnrichedUsers } from "../users/enrich";
 import { getFollowedReplierCounts } from "./replies";
 
 export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
     // Format 
     const postIds: string[] = []
-    const userIds: Set<string> = new Set()
+    const userIdSet: Set<string> = new Set()
     for (const post of posts.values()) {
         postIds.push(post.id)
-        userIds.add(post.userId)
+        userIdSet.add(post.userId)
     }
+    const userIds = [...userIdSet]
     const viewerId = viewer?.id
     // Fetch
     const [users, likes, views, clicks, engagementHistories, followedReplierCounts] = await Promise.all([
-        getEnrichedUsers([...userIds], viewerId),
+        getEnrichedUsers(userIds, viewerId),
         viewerId ? cachedLikes.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedViews.get(postIds, viewerId, posts) : undefined,
         viewerId ? cachedClicks.get(postIds, viewerId, posts) : undefined,
-        viewerId ? cachedEngagementHistory(viewerId).read([...userIds]) : undefined,
+        viewerId ? getEngagementHistoryScores(viewerId, userIds) : undefined,
         viewerId ? getFollowedReplierCounts(viewerId, [...posts.values()]) : undefined
     ])
     // Aggregate
@@ -33,7 +34,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
         const liked = likes?.get(post.id) || false;
         const viewed = views?.get(post.id) || false;
         const clicked = clicks?.get(post.id) || false;
-        const engagementHistory = engagementHistories?.get(post.userId) || null
+        const engagementHistoryScore = engagementHistories?.[i] || 0
         const user = users.get(post.userId)
         const followedReplierCount = followedReplierCounts?.[i] || 0
         if (!user) throw new Error("Missing user")
@@ -48,7 +49,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
             views: post.viewCount,
             engagementCount: post.engagementCount,
             similarity: viewer && viewer.embedding && post.embedding ? cosineSimilarity(post.embedding, viewer.embedding) : 0,
-            engagementHistory: engagementHistory,
+            engagementHistoryScore,
             repliedByFollowed: false,
             followedReplierCount,
             liked: liked,

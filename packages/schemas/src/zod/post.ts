@@ -12,7 +12,7 @@ export const UserEngagementHistorySchema = z.object({
 
 export const PersonalPostSchema = z.object({
     id: z.string(),
-    userId:z.string(),
+    userId: z.string(),
     text: z.string().nullable(),
     createdAt: z.coerce.date(),
     likes: z.number(),
@@ -20,7 +20,7 @@ export const PersonalPostSchema = z.object({
     clicks: z.number(),
     views: z.number(),
     similarity: z.number(),
-    engagementHistory: UserEngagementHistorySchema.nullable(),
+    engagementHistoryScore: z.number(),
     repliedByFollowed: z.boolean(),
     liked: z.boolean(),
     user: ClientUserSchema,
@@ -29,11 +29,11 @@ export const PersonalPostSchema = z.object({
     embeddingText: z.string().nullable(),
     commentScore: z.number(),
     source: z.string().optional(),
-    score:z.number().optional(),
-    replyingTo:z.string().nullable(),
-    deleted:z.boolean().default(false)
+    score: z.number().optional(),
+    replyingTo: z.string().nullable(),
+    deleted: z.boolean().default(false)
 })
 
 
 export type PersonalPost = z.infer<typeof PersonalPostSchema>;
-export type PostToEdit = Pick<PersonalPost,"id"|"text"|"media"|"replyingTo">
+export type PostToEdit = Pick<PersonalPost, "id" | "text" | "media" | "replyingTo">

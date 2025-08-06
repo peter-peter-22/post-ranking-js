@@ -1,78 +1,57 @@
-import { and, eq, inArray } from "drizzle-orm";
-import { db } from "../../db";
-import { engagementHistory, EngagementHistory } from "../../db/schema/engagementHistory";
-import { cachedHset } from "../bulkHSetRead";
-import { typedHSet } from "../typedHSet";
+import { getDays } from "../../db/controllers/engagementHistory/update";
+import { EngagementHistory } from "../../db/schema/engagementHistory";
+import { ProcessContext } from "../../userActions/posts/engagements/updates";
 import { redisClient } from "../connect";
-import { engagementHistoryJobs } from "../jobs/categories/engagementHistory";
-import { userTTL } from "../common";
+import { typedHSet } from "../typedHSet";
 
-function userEngagementHistoryRedisKey(viewerId: string, posterId: string) {
-    return `user:${viewerId}:engagementHistory:${posterId}`;
+export function userEngagementHistoryRedisKey(viewerId: string, posterId: string, timeBucket: number) {
+    return `user:${viewerId}:engagementHistory:counts:${timeBucket}:${posterId}`;
 }
-const schema = typedHSet<EngagementHistory>({
+
+export function userEngagementHistoryScoresRedisKey(viewerId: string) {
+    return `user:${viewerId}:engagementHistory:scores`;
+}
+
+export const engagementHistoryHsetSchema = typedHSet<EngagementCounts>({
     likes: "number",
     replies: "number",
     clicks: "number",
-    viewerId: "string",
-    publisherId: "string",
+    timeBucket: "number"
 })
-const getKey = (viewerId: string) => (posterId: string) => userEngagementHistoryRedisKey(viewerId, posterId)
 
-export const cachedEngagementHistory = (viewerId: string) => {
-    return cachedHset<EngagementHistory>({
-        schema,
-        getKey: getKey(viewerId),
-        generate: async (posterIds: string[]) => {
-            // Fetch from db
-            const rows = await db
-                .select()
-                .from(engagementHistory)
-                .where(and(
-                    eq(engagementHistory.viewerId, viewerId),
-                    inArray(engagementHistory.publisherId, posterIds)
-                ))
-            // Createa a map
-            const map = new Map<string, EngagementHistory>()
-            for (const row of rows) {
-                map.set(row.publisherId, row)
-            }
-            // Save to redis
-            const multi = redisClient.multi()
-            for (const posterId of posterIds) {
-                const myHistory = map.get(posterId)
-                const key = userEngagementHistoryRedisKey(viewerId, posterId)
-                // If no prior engagement history belongs to this user, create a placeholder value in redis to prevent database fallbacks
-                multi.hSet(key, schema.serialize(myHistory || {
-                    viewerId,
-                    publisherId: posterId,
-                    likes: 0,
-                    replies: 0,
-                    clicks: 0
-                }))
-                multi.expire(key, userTTL)
-            }
-            await multi.exec()
-            return rows
-        },
-        getId: (value: EngagementHistory) => value.publisherId,
-    })
+export type EngagementCounts = Pick<Partial<EngagementHistory>, "likes" | "clicks" | "replies" | "timeBucket">
+
+export type EngagementUpdates = Required<EngagementCounts> & { publisherId: string }
+
+// TODO chain to update engagement context
+export const updateEngagementHistory = (viewerId: string, updates: EngagementUpdates[], { redis }: ProcessContext) => {
+    // Get the edited time bucket
+    const timeBucket = getDays()
+    for (const { publisherId, likes, clicks, replies } of updates) {
+        const key = userEngagementHistoryRedisKey(viewerId, publisherId, timeBucket)
+        // Increment counters
+        if (likes) redis.hIncrBy(key, "likes", likes)
+        if (clicks) redis.hIncrBy(key, "clicks", clicks)
+        if (replies) redis.hIncrBy(key, "clicks", replies)
+        // Increment score
+        redis.zIncrBy(
+            userEngagementHistoryScoresRedisKey(viewerId),
+            getEngagementHistoryScore({ likes, clicks, replies }),
+            publisherId
+        )
+    }
+    // Shedule update job
+    //await engagementHistoryJobs.addJob({ data: viewerId })
 }
 
-export type AggregatedEngagements=Omit<EngagementHistory,"viewerId">
+export async function getEngagementHistoryScores(viewerId: string, posterIds: string[]) {
+    return await redisClient.zmScore(userEngagementHistoryScoresRedisKey(viewerId), posterIds)
+}
 
-// TODO: keep this in cache
-export const updateEngagementHistory = async (viewerId: string, updates: AggregatedEngagements[]) => {
-    // Ensure the cache is loaded before the increment happens
-    await cachedEngagementHistory(viewerId).read(updates.map(e => e.publisherId))
-    // Increment
-    const multi = redisClient.multi()
-    for (const { publisherId, likes, clicks, replies } of updates) {
-        if (likes) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, publisherId), "likes", likes)
-        if (clicks) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, publisherId), "clicks", clicks)
-        if (replies) multi.hIncrBy(userEngagementHistoryRedisKey(viewerId, publisherId), "clicks", replies)
-    }
-    await multi.exec()
-    // Shedule update job
-    await engagementHistoryJobs.addJob({ data: viewerId })
-}   
+export function getEngagementHistoryScore(eh: EngagementCounts) {
+    let score = 0
+    if (eh.likes !== undefined) score += eh.likes
+    if (eh.clicks !== undefined) score += eh.clicks
+    if (eh.replies !== undefined) score += eh.replies
+    return score
+}

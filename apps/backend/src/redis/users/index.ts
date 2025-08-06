@@ -1,12 +1,15 @@
 import { inArray } from "drizzle-orm";
 import { db } from "../../db";
-import { Follow, follows } from "../../db/schema/follows";
+import { loadAggregatedEngagementHistory, loadCurrentEngagementHistory } from "../../db/controllers/engagementHistory/update";
+import { follows } from "../../db/schema/follows";
 import { User, users } from "../../db/schema/users";
 import { cachedHset } from "../bulkHSetRead";
 import { userTTL } from "../common";
 import { redisClient } from "../connect";
 import { typedHSet } from "../typedHSet";
+import { engagementHistoryHsetSchema, getEngagementHistoryScore, userEngagementHistoryRedisKey, userEngagementHistoryScoresRedisKey } from "./engagementHistory";
 import { userFollowingRedisKey } from "./follows";
+import { toMap } from "../utilities";
 
 export function userContentRedisKey(id: string) {
     return `user:${id}:content`;
@@ -43,7 +46,20 @@ export const cachedUsers = cachedHset<User>({
 })
 
 export async function addUsersToCache(newUsers: User[]) {
-    const followMap = groupFollows(await db.select().from(follows).where(inArray(follows.followerId, newUsers.map(user => user.id))))
+    const userIds = newUsers.map(user => user.id)
+    // TODO do these in pararrel
+    const followsPerUser = toMap(
+        await db.select().from(follows).where(inArray(follows.followerId, userIds)),
+        (follow) => follow.followerId
+    )
+    const aggregatedEngagementHistoryPerUser = toMap(
+        await loadAggregatedEngagementHistory(userIds),
+        (eh) => eh.viewerId
+    )
+    const currentEngagementHistoryPerUser = toMap(
+        await loadCurrentEngagementHistory(userIds),
+        (eh) => eh.viewerId
+    )
     const multi = redisClient.multi()
     for (const user of newUsers) {
         // User content
@@ -51,26 +67,29 @@ export async function addUsersToCache(newUsers: User[]) {
         multi.hSet(key, userHsetSchema.serialize(user))
         multi.expire(key, userTTL)
         // Follows
-        const myFollows = followMap.get(user.id)
+        const myFollows = followsPerUser.get(user.id)
         if (myFollows) {
             const followsKey = userFollowingRedisKey(user.id)
-            multi.sAdd(followsKey, [...myFollows])
+            multi.sAdd(followsKey, myFollows.map(f => f.followedId))
             multi.expire(followsKey, userTTL)
+        }
+        // Current engagement histories
+        const myCurrentEngagementHistories = currentEngagementHistoryPerUser.get(user.id)
+        if (myCurrentEngagementHistories) {
+            for (const eh of myCurrentEngagementHistories) {
+                const key = userEngagementHistoryRedisKey(user.id, eh.publisherId, eh.timeBucket)
+                multi.hSet(key, engagementHistoryHsetSchema.serialize(eh))
+                multi.expire(key, userTTL)
+            }
+        }
+        // Total engagement history scores
+        const myTotalEngagementHistories = aggregatedEngagementHistoryPerUser.get(user.id)
+        if (myTotalEngagementHistories) {
+            const key = userEngagementHistoryScoresRedisKey(user.id)
+            multi.zAdd(key, myTotalEngagementHistories.map(eh => ({ value: eh.publisherId, score: getEngagementHistoryScore(eh) })))
+            multi.expire(key, userTTL)
         }
         // Notifications
     }
     await multi.exec()
-}
-
-function groupFollows(follows: Follow[]) {
-    const map = new Map<string, Set<string>>()
-    for (const follow of follows) {
-        let set = map.get(follow.followerId)
-        if (set === undefined) {
-            set = new Set<string>()
-            map.set(follow.followerId, set)
-        }
-        set.add(follow.followedId)
-    }
-    return map
 }

@@ -1,4 +1,8 @@
-add user engagement history update on engagemenet counter update
-make all engagements use the engagement counter update
-add the total engagement history of likers and commenters to posts
 replace all occurences of personalizepost and post process post
+centralized cache ttl. notify-keyspace-events Ex
+add the total engagement history of likers and commenters to posts. requirement: track likers in redis, implement aggregated engagement score
+debloat cache?
+optimize media transfer
+remove pending posts
+remove unused db columns and indexes
+replace all recalculations by saving the cached numbers

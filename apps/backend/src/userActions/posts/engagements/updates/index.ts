@@ -1,8 +1,7 @@
-import { likes } from "../../../../db/schema/likes"
 import { RedisMulti } from "../../../../redis/common"
 import { redisClient } from "../../../../redis/connect"
 import { jobQueue, JobToAdd } from "../../../../redis/jobs/queue"
-import { AggregatedEngagements, updateEngagementHistory } from "../../../../redis/users/engagementHistory"
+import { EngagementUpdates, updateEngagementHistory } from "../../../../redis/users/engagementHistory"
 import { setClicks } from "./clicks"
 import { setLikes } from "./likes"
 import { setReplies } from "./replies"
@@ -43,8 +42,7 @@ export async function processEngagementUpdates(
         setReplies(userId, actions.replies, ctx)
     }
 
-    // TODO add to multi after upgrading
-    ctx.promises.push(updateEngagementHistory(userId, aggregateEngagements(actions)))
+    updateEngagementHistory(userId, aggregateEngagements(actions), ctx)
 
     await Promise.all([
         jobQueue.addBulk(ctx.jobs),
@@ -59,6 +57,8 @@ function aggregateEngagements(actions: {
     clicks?: EngagementActionResult[],
     views?: EngagementActionResult[]
 }) {
+    const updates = new Map<string, EngagementUpdates>()
+
     const getCounters = (userId: string) => {
         let myCounts = updates.get(userId)
         if (!myCounts) {
@@ -73,7 +73,6 @@ function aggregateEngagements(actions: {
         return myCounts
     }
 
-    const updates = new Map<string, AggregatedEngagements>()
     if (actions.likes) for (const like of actions.likes) {
         getCounters(like.posterId).likes++
     }

@@ -9,8 +9,9 @@ export const engagementHistory = pgTable('engagement_history', {
     clicks: integer().notNull().default(0),
     viewerId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
     publisherId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
+    timeBucket: integer().notNull()
 }, (t) => [
-    primaryKey({ columns: [t.viewerId, t.publisherId] }),
+    primaryKey({ columns: [t.viewerId, t.timeBucket, t.publisherId] }), // Used when looking up engagement histories from the last 1 month, and to enforce uniqueness
     index().on(t.viewerId, t.likes.desc()) // Used in "who to follow" dialog to get the top engaged users of a viewer
 ]);
 

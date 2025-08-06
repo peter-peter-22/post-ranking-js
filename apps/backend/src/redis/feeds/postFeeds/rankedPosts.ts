@@ -145,7 +145,7 @@ export async function getPaginatedRankedPosts<TPageParams>({
 }
 
 /** Convert ranked posts to data that can be added to a zset. */
-function postsToZSet(posts: PersonalPost[]) {
+function postsToZSet(posts: PersonalPost[]):ZSetEntry[] {
     return posts.map(post => ({ value: post.id, score: post.score ?? 0 }))
 }
 
