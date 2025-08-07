@@ -3,12 +3,12 @@ import { db } from "../../db";
 import { posts } from "../../db/schema/posts";
 import { User } from "../../db/schema/users";
 import { HttpError } from "../../middlewares/errorHandler";
-import { DatePageParams, deduplicatePersonalPosts, mergePostArrays } from "../common";
 import { ESimPageParams } from "../forYou/candidates/embedding";
 import { getTrendCandidates } from "../forYou/candidates/trending";
 import { postProcessPosts } from "../postProcessPosts";
 import { rankPosts } from "../ranker";
 import { getPostEmbeddingSimilarityCandidates } from "./candidates/embedding";
+import { DatePageParams } from "../common";
 
 export type RelevantPostsPageParams = {
     trends?: DatePageParams,

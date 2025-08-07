@@ -1,4 +1,4 @@
-import { eq, gt, gte, isNotNull, isNull, lte, notInArray, or } from "drizzle-orm";
+import { eq, gte, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { posts } from "../db/schema/posts";
 
 /** Filter out pending posts. */

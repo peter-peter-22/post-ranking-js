@@ -24,4 +24,9 @@ export function escapeTagValue(value: string): string {
     return value.replace(/([,\.\<\>\{\}\[\]\"\':;!@#\$%\^\&\*\(\)\-\+\=~])/g, '\\$1');
 }
 
+/** Return the current time in seconds. */
+export function currentTimeS(){
+    return new Date().getTime() / 1000
+}
+
 await initializeRedisSearch()

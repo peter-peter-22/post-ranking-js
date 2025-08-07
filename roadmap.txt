@@ -1,4 +1,5 @@
 replace all occurences of personalizepost and post process post and indexed lookup
+fix the search feed, it displays posts without realtime engagements
 centralized cache ttl. notify-keyspace-events Ex
 remove all recalculations?
 do something with the snapshots
@@ -11,3 +12,4 @@ optimize media transfer
 remove pending posts
 remove unused db columns and indexes
 replace all recalculations by saving the cached numbers
+separate full text search db

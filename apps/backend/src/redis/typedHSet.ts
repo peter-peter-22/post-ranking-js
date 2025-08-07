@@ -13,7 +13,7 @@ function deserializeField(value: string | undefined, fieldType: FieldType) {
         case "number":
             return Number(value)
         case "boolean":
-            return value === "true"
+            return value === "1"
         case "json":
             return JSON.parse(value)
         case "date":
@@ -35,7 +35,7 @@ function serializeField(value: any, fieldType: FieldType): string | undefined {
             return value.toString()
         case "boolean":
             if (!(typeof value === "boolean")) throw new Error("Invalid boolean")
-            return value.toString()
+            return value ? "1" : "0"
         case "json":
             if (!(typeof value === "object")) throw new Error("Invalid json")
             return JSON.stringify(value)
@@ -49,10 +49,10 @@ function serializeField(value: any, fieldType: FieldType): string | undefined {
 }
 
 export type HSetValue = { [key: string]: any }
-export type HSetSchema<T extends HSetValue> = { [K in keyof T]: FieldType }
+export type HSetSchema<TData extends HSetValue> = { [K in keyof TData]: FieldType }
 
-export function typedHSet<T extends HSetValue>(schema: HSetSchema<T>) {
-    const deserialize = (data: { [key: string]: string }): T => {
+export function typedHSet<TData extends HSetValue>(schema: HSetSchema<TData>) {
+    const deserialize = (data: { [key: string]: string }): TData => {
         return Object.fromEntries(
             Object.entries(schema).map(
                 ([key, fieldType]) => {
@@ -60,14 +60,14 @@ export function typedHSet<T extends HSetValue>(schema: HSetSchema<T>) {
                     return [key, deserializeField(value, fieldType)]
                 }
             )
-        ) as T
+        ) as TData
     }
 
-    const serialize = (data: T): Record<string, string> => {
+    const serialize = (data: TData): Record<string, string> => {
         return serializePartial(data)
     }
 
-    const serializePartial = (data: Partial<T>): Record<string, string> => {
+    const serializePartial = (data: Partial<TData>): Record<string, string> => {
         const result: Record<string, string> = {}
         Object.entries(schema).map(
             ([key, fieldType]) => {
@@ -80,7 +80,7 @@ export function typedHSet<T extends HSetValue>(schema: HSetSchema<T>) {
         return result
     }
 
-    const parseSearch = (searchResult: SearchReply): T[] => {
+    const parseSearch = (searchResult: SearchReply): TData[] => {
         return searchResult.documents.map(({ value }) => deserialize(value as Record<string, string>))
     }
 

@@ -23,6 +23,9 @@ export async function initializeRedisSearch() {
     async (name) => {
       await redisClient.ft.create(name, {
         handle: { type: SchemaFieldTypes.TAG },
+        publicExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        privateExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        privateDataExists: { type: SchemaFieldTypes.TAG }
       }, {
         ON: 'HASH',
         PREFIX: ['user:']
