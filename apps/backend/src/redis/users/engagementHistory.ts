@@ -5,23 +5,28 @@ import { redisClient } from "../connect";
 import { typedHSet } from "../typedHSet";
 
 export function userEngagementHistoryRedisKey(viewerId: string, posterId: string, timeBucket: number) {
-    return `user:${viewerId}:engagementHistory:counts:${timeBucket}:${posterId}`;
+    return `engagementHistory:${viewerId}:counts:${timeBucket}:${posterId}`;
 }
 
 export function userEngagementHistoryScoresRedisKey(viewerId: string) {
-    return `user:${viewerId}:engagementHistory:scores`;
+    return `engagementHistory:${viewerId}:scores`;
 }
 
-export const engagementHistoryHsetSchema = typedHSet<EngagementCounts>({
+export const engagementHistoryHsetSchema = typedHSet<CachedEngagementCounts>({
     likes: "number",
     replies: "number",
     clicks: "number",
-    timeBucket: "number"
+    timeBucket: "number",
+    viewerId: "string",
+    publisherId: "string",
+    isDirty: "boolean"
 })
 
-export type EngagementCounts = Pick<Partial<EngagementHistory>, "likes" | "clicks" | "replies" | "timeBucket">
+export type CachedEngagementCounts = Partial<EngagementHistory> & Pick<EngagementHistory, "publisherId" | "viewerId" | "timeBucket"> & { isDirty?: boolean }
 
-export type EngagementUpdates = Required<EngagementCounts> & { publisherId: string }
+export type EngagementUpdates = Pick<EngagementHistory, "likes" | "replies" | "clicks" | "publisherId">
+
+export type EngagementCounts = Omit<EngagementUpdates, "publisherId">
 
 /** Increment engagement counts and update scores. */
 export const updateEngagementHistory = (viewerId: string, updates: EngagementUpdates[], { redis }: ProcessContext) => {
@@ -29,6 +34,8 @@ export const updateEngagementHistory = (viewerId: string, updates: EngagementUpd
     const timeBucket = getDays()
     for (const { publisherId, likes, clicks, replies } of updates) {
         const key = userEngagementHistoryRedisKey(viewerId, publisherId, timeBucket)
+        // Set initial values
+        engagementHistoryHsetSchema.serializePartial({ publisherId, viewerId, timeBucket, isDirty: true })
         // Increment counters
         if (likes) redis.hIncrBy(key, "likes", likes)
         if (clicks) redis.hIncrBy(key, "clicks", clicks)

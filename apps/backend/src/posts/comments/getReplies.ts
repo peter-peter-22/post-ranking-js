@@ -9,7 +9,7 @@ import { enrichPosts, postArrayToMap } from "../../redis/postContent/enrich"
 import { repliersRedisKey } from "../../redis/postContent/replies"
 import { userFollowingRedisKey } from "../../redis/users/follows"
 import { deduplicatePosts, SingleDatePageParams } from "../common"
-import { PersonalPost } from "../hydratePosts"
+import { PersonalPost } from "@me/schemas/src/zod/post"
 
 export type CommentsPageParams = {
     latest?: SingleDatePageParams

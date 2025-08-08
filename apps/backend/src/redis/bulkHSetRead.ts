@@ -7,11 +7,13 @@ export function cachedHset<T extends HSetValue>({
     getKey,
     generate,
     getId,
+    onRead
 }: {
     schema: TypedHSetHandler<T>,
     getKey: (id: string) => string,
     getId: (value: T) => string,
     generate: (ids: string[], schema: TypedHSetHandler<T>) => Promise<T[]>,
+    onRead?: (values: Map<string, T | undefined>) => Promise<void>
 }) {
 
     const read = async (ids: string[]) => {
@@ -49,6 +51,8 @@ export function cachedHset<T extends HSetValue>({
                 resultMap.set(id, data)
             }
         }
+        // Post process the results if needed
+        if (onRead) await onRead(resultMap)
         return resultMap
     }
 

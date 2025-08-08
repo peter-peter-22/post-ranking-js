@@ -50,7 +50,16 @@ export const cachedUsers = cachedHset<User>({
         await multi.exec()
         return newUsers
     },
-    getId: (user: User) => user.id
+    getId: (user: User) => user.id,
+    onRead: async (values) => {
+        // Update expiration on read
+        const multi = redisClient.multi()
+        for (const value of values.values()) {
+            if (!value) continue
+            touchUser(multi, value.id)
+        }
+        await multi.exec()
+    }
 })
 
 export function addUsersToCache(newUsers: User[], multi: RedisMulti) {
@@ -61,7 +70,7 @@ export function addUsersToCache(newUsers: User[], multi: RedisMulti) {
     }
 }
 
-export async function addOnlineUsersToCache(newUsers: User[]) {
+export async function generateOnlineUserCache(newUsers: User[]) {
     const { followsPerUser, currentEHsPerUser, aggregatedEHsPerUser } = await getOnlineUserData(newUsers)
     const multi = redisClient.multi()
     // User content
@@ -115,4 +124,10 @@ async function getOnlineUserData(newUsers: User[]) {
         (eh) => eh.viewerId
     )
     return { followsPerUser, aggregatedEHsPerUser, currentEHsPerUser }
+}
+
+/** Load the personal data of online users to the cache if does not exists. */
+export async function ensureUserPersonalData(user: User) {
+    if (!user.privateExists)
+        await generateOnlineUserCache([user])
 }

@@ -5,7 +5,8 @@ import { User, userColumns, UserCommon, users } from '../db/schema/users';
 import { HttpError } from '../middlewares/errorHandler';
 import { redisClient } from '../redis/connect';
 import { escapeTagValue } from '../redis/common';
-import { addUsersToCache, userHsetSchema } from '../redis/users';
+import { addUsersToCache, ensureUserPersonalData, userHsetSchema } from '../redis/users';
+import { touchOnlineUser, touchUser } from '../redis/users/expiration';
 
 /** Get the authenticated user from the request. */
 export async function authRequest(req: Request) {
@@ -58,14 +59,20 @@ export async function authUser(userhandle: string): Promise<User | undefined> {
     const result = await redisClient.ft.search("users", `@handle:{${escapeTagValue(userhandle)}}`)
     let [user] = userHsetSchema.parseSearch(result)
     // Fallback to database
-    user = (
-        await db.select()
-            .from(users)
-            .where(eq(users.handle, userhandle))
-    )[0]
+    if (!user)
+        user = (
+            await db.select()
+                .from(users)
+                .where(eq(users.handle, userhandle))
+        )[0]
     if (user) {
-        // Add to cache if exists
-        await addUsersToCache([user])
+        // Ensure personal cache if exists
+        await ensureUserPersonalData(user)
+        // Update expirations
+        const multi = redisClient.multi()
+        touchUser(multi, user.id)
+        touchOnlineUser(multi, user.id)
+        await multi.exec()
     }
     return user
 }

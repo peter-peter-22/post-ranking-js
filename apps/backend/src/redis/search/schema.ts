@@ -33,5 +33,18 @@ export async function initializeRedisSearch() {
     }
   )
 
+  // engagement histories
+  await createIndexIfNotExists("engagementHistories",
+    async (name) => {
+      await redisClient.ft.create(name, {
+        publisherId: { type: SchemaFieldTypes.TAG },
+        viewerId: { type: SchemaFieldTypes.TAG },
+      }, {
+        ON: 'HASH',
+        PREFIX: ['engagementHistory:']
+      });
+    }
+  )
+
   console.log("Redis inexes created")
 }
