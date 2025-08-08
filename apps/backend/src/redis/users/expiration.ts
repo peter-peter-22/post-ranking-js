@@ -93,6 +93,7 @@ async function removeUserPersinalDataCache(usersToRemove: User[], EHs: CachedEng
     for (const user of usersToRemove) {
         multi.del(userFollowingRedisKey(user.id))
         multi.del(userEngagementHistoryScoresRedisKey(user.id))
+        multi.hSet(userContentRedisKey(user.id), userHsetSchema.serializePartial({ privateExists: false }))
     }
     for (const eh of EHs) {
         multi.del(userEngagementHistoryRedisKey(eh.viewerId, eh.publisherId, eh.timeBucket))
