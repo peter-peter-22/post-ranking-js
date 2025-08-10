@@ -15,6 +15,7 @@ export const isReply = () => isNotNull(posts.replyingTo)
 /** Filter out the posts those have a significant amount of views, but no engagement. */
 export const minimalEngagement = () => or(gte(posts.engagementCount, 5), lte(posts.viewCount, 50));
 
+/** Max age of the post on the main feed in ms */
 export const mainFeedMaxAge = 1000 * 60 * 60 * 24 * 2  // 2 days
 
 /** Get the date of the max age of the posts. */

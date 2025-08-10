@@ -3,14 +3,12 @@ import { redisClient } from "./connect"
 import { initializeRedisSearch } from "./search/schema"
 
 export const defaultDataFeedTTL = 60 * 30
-export const postTTL=defaultDataFeedTTL
-export const userTTL = postTTL
+export const postTTL = defaultDataFeedTTL
+export const userTTL = 60 * 60
 export const userPersonalTTL = 60 * 60
 
-export function getMainFeedTTL(createdAt: Date, minimumTTL: number) {
-    const ageMs = new Date().getTime() - new Date(createdAt).getTime()
-    const remainingTimeS = Math.round((mainFeedMaxAge - ageMs) / 1000)
-    return Math.max(remainingTimeS, minimumTTL)
+export function getMainFeedExpiration(createdAt: Date) {
+    return Math.round((new Date(createdAt).getTime() + mainFeedMaxAge) / 1000)
 }
 
 export type RedisMulti = ReturnType<typeof redisClient.multi>
@@ -25,7 +23,7 @@ export function escapeTagValue(value: string): string {
 }
 
 /** Return the current time in seconds. */
-export function currentTimeS(){
+export function currentTimeS() {
     return new Date().getTime() / 1000
 }
 

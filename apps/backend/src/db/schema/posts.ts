@@ -96,6 +96,11 @@ export const posts = pgTable('posts', {
     index('searchTopUserPostsIndex').on(table.userId, table.engagementCount.desc()),
 ]);
 
-export type Post = InferSelectModel<typeof posts>;
+export type Post = InferSelectModel<typeof posts> & {
+    publicExpires?: number,
+    rankingExists?: boolean,
+    rankingExpires?: number,
+    commentsExists?: boolean,
+};
 
 export type PostToInsert = InferInsertModel<typeof posts>;

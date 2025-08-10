@@ -3,9 +3,9 @@ import { Request } from 'express';
 import { db } from '../db';
 import { User, userColumns, UserCommon, users } from '../db/schema/users';
 import { HttpError } from '../middlewares/errorHandler';
-import { redisClient } from '../redis/connect';
 import { escapeTagValue } from '../redis/common';
-import { addUsersToCache, ensureUserPersonalData, userHsetSchema } from '../redis/users';
+import { redisClient } from '../redis/connect';
+import { ensureUserPersonalData, userHsetSchema } from '../redis/users';
 import { touchOnlineUser, touchUser } from '../redis/users/expiration';
 
 /** Get the authenticated user from the request. */

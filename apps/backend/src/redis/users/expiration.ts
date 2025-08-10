@@ -4,10 +4,12 @@ import { db } from "../../db";
 import { engagementHistory } from "../../db/schema/engagementHistory";
 import { User, users } from "../../db/schema/users";
 import { bulkUpdateFromValues } from "../../db/utils/bulkUpdate";
-import { currentTimeS, RedisMulti, userTTL } from "../common";
+import { currentTimeS, RedisMulti, userPersonalTTL, userTTL } from "../common";
 import { redisClient } from "../connect";
 import { CachedEngagementCounts, engagementHistoryHsetSchema, userEngagementHistoryRedisKey, userEngagementHistoryScoresRedisKey } from "./engagementHistory";
 import { userFollowingRedisKey } from "./follows";
+
+const maxCount=1000
 
 export function touchUser(multi: RedisMulti, id: string) {
     multi.hSet(
@@ -19,7 +21,7 @@ export function touchUser(multi: RedisMulti, id: string) {
 export function touchOnlineUser(multi: RedisMulti, id: string) {
     multi.hSet(
         userContentRedisKey(id),
-        userHsetSchema.serializePartial({ privateExpires: currentTimeS() + userTTL })
+        userHsetSchema.serializePartial({ privateExpires: currentTimeS() + userPersonalTTL })
     )
 }
 
@@ -34,7 +36,7 @@ async function handleUserExpiration() {
     // Get the expired users
     const usersToRemove = await getUsersToRemove()
     // Handle the private data of the expired users
-    await handleExpiredUsersPrivateData(usersToRemove.filter(u => u.privateExists))
+    await handleExpiredUsersPrivateData(usersToRemove)
     // Save realtime data
     await saveUserRealtimeData(usersToRemove)
     // Remove from redis
@@ -67,7 +69,7 @@ async function getUsersToRemove() {
     const time = currentTimeS()
     const query = `@publicExpires:[-inf ${time}] @privateExpires:[-inf ${time}]`;
     const results = await redisClient.ft.search('users', query, {
-        LIMIT: { from: 0, size: 1000 }
+        LIMIT: { from: 0, size: maxCount }
     });
     return userHsetSchema.parseSearch(results)
 }
@@ -105,7 +107,7 @@ async function getUsersWithPersonalDataToRemove() {
     const time = currentTimeS()
     const query = `@privateExists:{1} @privateExpires:[-inf ${time}]`;
     const results = await redisClient.ft.search('users', query, {
-        LIMIT: { from: 0, size: 1000 }
+        LIMIT: { from: 0, size: maxCount }
     });
     return userHsetSchema.parseSearch(results)
 }

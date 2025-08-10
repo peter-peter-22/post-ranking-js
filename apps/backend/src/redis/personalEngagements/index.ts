@@ -1,12 +1,6 @@
 import { Post } from "../../db/schema/posts"
 import { cachedBulkExistenceCheck } from "../bulkExistenceRead"
-import { getMainFeedTTL, userTTL } from "../common"
-
-export function getPersonalEngagementTTL(id: string, posts: Map<string, Post>) {
-    const post = posts.get(id)
-    if (!post) return userTTL
-    return getMainFeedTTL(post.createdAt, userTTL)
-}
+import { userPersonalTTL } from "../common"
 
 export function cachedPersonalEngagements({
     getKey,
@@ -19,7 +13,7 @@ export function cachedPersonalEngagements({
         await cachedBulkExistenceCheck({
             getKey: (id: string) => getKey(id, userId),
             fallback: (ids: string[]) => fallback(ids, userId),
-            getTTL: (id: string) => getPersonalEngagementTTL(id, posts),
+            getTTL: ()=>userPersonalTTL,
         }).read(ids)
     )
 

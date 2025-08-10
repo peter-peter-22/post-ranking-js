@@ -1,5 +1,10 @@
 namespace cache ttl for posts
-repalce all recalculations with cache writes
+fix setlikes, remove posterid from engagements
+prevent incrementing likers arrays on unranked posts
+remove pending posts
+remove unused db columns and indexes
+add redis persistence
+replace all recalculations with cache writes
 replace all occurences of personalizepost and post process post and indexed lookup
 fix the search feed, it displays posts without realtime engagements
 do something with the snapshots, the engagement history snapshots are not updated
@@ -7,10 +12,7 @@ cache notifications feed
 cache trend caclulation
 add the total engagement history of likers and commenters to posts. requirement: track likers in redis, implement aggregated engagement score
 apply changes to ranking params
-debloat cache?
 optimize media transfer
-remove pending posts
-remove unused db columns and indexes
 replace all recalculations by saving the cached numbers
 separate full text search db
 use a redis ORM?

@@ -11,6 +11,9 @@ export async function initializeRedisSearch() {
         replyingTo: { type: SchemaFieldTypes.TAG },
         userId: { type: SchemaFieldTypes.TAG },
         createdAt: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        publicExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        rankingExists: { type: SchemaFieldTypes.TAG },
+        rankingExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
       }, {
         ON: 'HASH',
         PREFIX: ['post:']
