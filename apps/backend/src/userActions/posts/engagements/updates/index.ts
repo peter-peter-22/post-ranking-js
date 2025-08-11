@@ -1,3 +1,4 @@
+import { Post } from "../../../../db/schema/posts"
 import { RedisMulti } from "../../../../redis/common"
 import { redisClient } from "../../../../redis/connect"
 import { jobQueue, JobToAdd } from "../../../../redis/jobs/queue"
@@ -8,18 +9,17 @@ import { setReplies } from "./replies"
 import { setViews } from "./views"
 
 export type EngagementActionResult = {
-    postId: string
     value: boolean,
-    posterId: string,
+    post: Post,
     date: Date
 }
 
 export type ProcessContext = { redis: RedisMulti, jobs: JobToAdd[], promises: Promise<void>[] }
 
-/** Process engagement updates in redis.
+/** Handle counters and notifications after engagements occur.
  */
 export async function processEngagementUpdates(
-    userId: string,
+    actorId: string,
     actions: {
         likes?: EngagementActionResult[],
         replies?: EngagementActionResult[],
@@ -30,22 +30,22 @@ export async function processEngagementUpdates(
     const ctx: ProcessContext = { redis: redisClient.multi(), jobs: [], promises: [] }
 
     if (actions.likes) {
-        setLikes(userId, actions.likes, ctx)
+        setLikes(actorId, actions.likes, ctx)
     }
     if (actions.clicks) {
-        setClicks(userId, actions.clicks, ctx)
+        setClicks(actorId, actions.clicks, ctx)
     }
     if (actions.views) {
-        setViews(userId, actions.views, ctx)
+        setViews(actorId, actions.views, ctx)
     }
     if (actions.replies) {
-        setReplies(userId, actions.replies, ctx)
+        setReplies(actorId, actions.replies, ctx)
     }
 
-    updateEngagementHistory(userId, aggregateEngagements(actions), ctx)
+    updateEngagementHistory(actorId, aggregateEngagements(actions), ctx)
 
     await Promise.all([
-        jobQueue.addBulk(ctx.jobs),
+        ctx.jobs.length > 0 ? jobQueue.addBulk(ctx.jobs) : undefined,
         ctx.redis.exec(),
         ...ctx.promises
     ])
@@ -74,13 +74,13 @@ function aggregateEngagements(actions: {
     }
 
     if (actions.likes) for (const like of actions.likes) {
-        getCounters(like.posterId).likes++
+        getCounters(like.post.userId).likes++
     }
     if (actions.replies) for (const reply of actions.replies) {
-        getCounters(reply.posterId).replies++
+        getCounters(reply.post.userId).replies++
     }
     if (actions.clicks) for (const click of actions.clicks) {
-        getCounters(click.posterId).clicks++
+        getCounters(click.post.userId).clicks++
     }
     return [...updates.values()]
 }

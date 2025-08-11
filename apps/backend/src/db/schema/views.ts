@@ -7,7 +7,6 @@ import { users } from './users';
 export const views = pgTable('views', {
     postId: uuid().notNull().references(() => posts.id, { onDelete: "cascade" }),
     userId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
-    posterId: uuid().notNull().references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp().notNull().defaultNow(),
 }, (t) => [
     primaryKey({columns: [t.postId, t.userId]}),

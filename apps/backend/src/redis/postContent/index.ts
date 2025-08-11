@@ -45,7 +45,6 @@ export const postHsetSchema = typedHSet<Post>({
     timeBucket: "number",
     isReply: "boolean",
     deleted: "boolean",
-    repliedUser: "string",
     publicExpires: "number",
     rankingExists: "boolean",
     rankingExpires: "number",
@@ -93,7 +92,7 @@ async function generatePostCache(postIds: string[]) {
     })
 
     // Load cache ranking and comment cache. They don't overlap.
-    await Promise.all([ 
+    await Promise.all([
         generateCommentSectionCache(repliesOnly),
         generateRankedPostCache(needRanking)
     ])
@@ -152,12 +151,13 @@ async function generateRankedPostCache(newPosts: Post[]) {
     }
 }
 
-/** Handle all cache related operations and notifications of a inserted post. */
+/** Handle all cache related operations and notifications of a inserted post.
+ * When a new post is inserted, mark all namespaces as existing to prevent unnecessary fallbacks. 
+ */
 export async function handlePostInsert({ post, replied }: PreparedPost) {
     const multi = redisClient.multi()
     if (post.replyingTo && replied) {
-        multi.hIncrBy(postContentRedisKey(post.replyingTo), "replyCount", 1)
-        cachedReplyWrite([post], replied, multi)
+        cachedReplyWrite([{ ...post, commentsExists: true }], replied, multi)
     }
     else {
         cachedPostWrite([{
@@ -171,8 +171,7 @@ export async function handlePostInsert({ post, replied }: PreparedPost) {
         multi.exec(),
         post.replyingTo ? processEngagementUpdates(post.userId, {
             replies: [{
-                postId: post.replyingTo,
-                posterId: post.userId,
+                post: post,
                 date: post.createdAt,
                 value: true
             }]
