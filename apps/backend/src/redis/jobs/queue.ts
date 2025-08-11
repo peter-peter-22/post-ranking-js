@@ -1,5 +1,6 @@
 import { ConnectionOptions, Job, JobsOptions, Queue, Worker } from 'bullmq';
 import { env } from 'process';
+import { expireJobs } from './categories/expire';
 
 /** Redis client config for job queue. */
 const redisJobsConnection: ConnectionOptions = {
@@ -55,7 +56,7 @@ async function processJob(job: Job): Promise<void> {
     await handler(job.data)
 }
 
-export type JobToAdd={name:string,data:any,opts:JobsOptions}
+export type JobToAdd = { name: string, data: any, opts: JobsOptions }
 
 export type JobCategoryData<TData> = { data: TData, delay?: number, options?: JobsOptions, key?: string }
 
@@ -112,3 +113,6 @@ export function jobCategory<TData>({
 }
 
 console.log("The worker started")
+
+// Start the repeating jobs
+await expireJobs.addJob({ data: undefined, key: "" })

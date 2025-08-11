@@ -57,9 +57,10 @@ function processPostText(post: PostToInsert) {
 export async function prepareReply(post: PostToInsert) {
     processPostText(post)
     if (!post.replyingTo) throw new HttpError(422, "Invalid reply.")
-    const repliedPost=await cachedPosts.readSingle(post.replyingTo)
+    const repliedPost = await cachedPosts.readSingle(post.replyingTo)
     if (!repliedPost) throw new HttpError(404, "The replied post does not exists.")
     post.repliedUser = repliedPost.userId
+    post.rootPostId = repliedPost.rootPostId || repliedPost.id
     return { post, replied: repliedPost }
 }
 export type PreparedPost = { post: Post, replied?: Post }

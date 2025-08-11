@@ -50,6 +50,7 @@ export const postHsetSchema = typedHSet<Post>({
     rankingExists: "boolean",
     rankingExpires: "number",
     commentsExists: "boolean",
+    rootPostId: "number"
 })
 const getKey = postContentRedisKey
 
@@ -71,16 +72,38 @@ export const cachedPosts = cachedHset<Post>({
 
 /** Fetch and cache posts. */
 async function generatePostCache(postIds: string[]) {
-    const newPosts = await db.select().from(posts).where(inArray(posts.id, postIds))
+    // Cache public data
+    const all = await db.select().from(posts).where(inArray(posts.id, postIds))
+    const postsOnly: Post[] = []
+    const repliesOnly: Post[] = []
+    for (const post of all)
+        if (post.rootPostId)
+            repliesOnly.push(post)
+        else
+            postsOnly.push(post)
     const multi = redisClient.multi()
-    cachedPostWrite(newPosts, multi)
+    cachedPostWrite(postsOnly, multi)
     await multi.exec()
-    await generateCommentSectionCache(newPosts)
-    return newPosts
+
+    // Filter out the posts those need ranking data
+    const currentTime = new Date().getTime()
+    const needRanking = postsOnly.filter(post => {
+        const age = currentTime - new Date(post.createdAt).getTime()
+        return age < mainFeedMaxAge
+    })
+
+    // Load cache ranking and comment cache. They don't overlap.
+    await Promise.all([ 
+        generateCommentSectionCache(repliesOnly),
+        generateRankedPostCache(needRanking)
+    ])
+
+    return all
 }
 
-/** Fetch and comment sections. */
+/** Fetch and cache comment sections. */
 async function generateCommentSectionCache(newPosts: Post[]) {
+    if (newPosts.length === 0) return
     const multi = redisClient.multi()
     const postReplyMap = await getReplies(newPosts)
     for (const post of newPosts) {
@@ -96,14 +119,7 @@ async function generateCommentSectionCache(newPosts: Post[]) {
 
 /** Fetch and cache post ranking related data. Also includes comment section data. */
 async function generateRankedPostCache(newPosts: Post[]) {
-    // Filter out the posts those need ranking data
-    const currentTime = new Date().getTime()
-    newPosts = newPosts.filter(post => {
-        const age = currentTime - new Date(post.createdAt).getTime()
-        return age < mainFeedMaxAge
-    })
-    if (newPosts.length == 0) return
-
+    if (newPosts.length === 0) return
     // Common data
     const postIds = newPosts.map(p => p.id)
     const multi = redisClient.multi()

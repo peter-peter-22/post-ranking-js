@@ -14,6 +14,7 @@ export async function initializeRedisSearch() {
         publicExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
         rankingExists: { type: SchemaFieldTypes.TAG },
         rankingExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        rootPostId: { type: SchemaFieldTypes.TAG }
       }, {
         ON: 'HASH',
         PREFIX: ['post:']

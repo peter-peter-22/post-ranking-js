@@ -3,10 +3,10 @@ import { db } from "../../db";
 import { addMedia } from "../../db/controllers/pendingUploads/updateMedia";
 import { Post, posts, PostToInsert } from "../../db/schema/posts";
 import { chunkedInsert } from "../../db/utils/chunkedInsert";
-import { handlePostInsert } from "../../redis/postContent/write";
 import { PostToFinalize } from "../../routes/userActions/posts/createPost";
 import { prepareAnyPost, preparePosts } from "./preparePost";
 import { HttpError } from "../../middlewares/errorHandler";
+import { handlePostInsert } from "../../redis/postContent";
 
 /** Insert posts to the database. */
 export async function bulkInsertPosts(postsToInsert: PostToInsert[]) {

@@ -1,10 +1,10 @@
 import { inArray } from "drizzle-orm"
+import { postContentRedisKey, postHsetSchema } from "."
 import { db } from "../../db"
 import { Post, posts } from "../../db/schema/posts"
-import { currentTimeS, getMainFeedExpiration, postTTL, RedisMulti } from "../common"
+import { RedisMulti } from "../common"
 import { redisClient } from "../connect"
 import { userFollowingRedisKey } from "../users/follows"
-import { postContentRedisKey, postHsetSchema } from "."
 
 export function repliersRedisKey(postId: string) {
     return `post:${postId}:replies:users`
@@ -30,10 +30,7 @@ export function cachedReplyWrite(replies: Post[], repliedPost: Post, multi: Redi
         const key = postContentRedisKey(reply.id)
         multi.hSet(
             key,
-            postHsetSchema.serialize({
-                ...reply,
-                publicExpires: Math.max(getMainFeedExpiration(repliedPost.createdAt), currentTimeS() + postTTL)
-            })
+            postHsetSchema.serialize(reply)
         );
     }
     // Cache the replying users of each post
@@ -42,22 +39,22 @@ export function cachedReplyWrite(replies: Post[], repliedPost: Post, multi: Redi
     multi.sAdd(repliersKey, replyingUsers)
 }
 
-/** Fetch the replies from the db and group them by replied post id. */
+/** Fetch the replies (including indirect) from the db and group them by replied post id. */
 export async function getReplies(newPosts: Post[]) {
     // Get the replies from the db
     const replies = await db
         .select()
         .from(posts)
-        .where(inArray(posts.replyingTo, newPosts.map(p => p.id)))
+        .where(inArray(posts.rootPostId, newPosts.map(p => p.id)))
 
     // Group by replied post id
     const postReplyMap = new Map<string, Post[]>()
     for (const post of replies) {
-        if (!post.replyingTo) continue
-        let repliesOfPost = postReplyMap.get(post.replyingTo)
+        if (!post.rootPostId) continue
+        let repliesOfPost = postReplyMap.get(post.rootPostId)
         if (!repliesOfPost) {
             repliesOfPost = []
-            postReplyMap.set(post.replyingTo, repliesOfPost)
+            postReplyMap.set(post.rootPostId, repliesOfPost)
         }
         repliesOfPost.push(post)
     }

@@ -78,6 +78,8 @@ export const posts = pgTable('posts', {
     deleted: boolean().notNull().default(false),
     //the id of the poster
     repliedUser: uuid().references(() => users.id, { onDelete: "cascade" }),
+    //the root of the comment section
+    rootPostId: uuid()
 }, (table) => [
     foreignKey({
         columns: [table.replyingTo],
@@ -94,6 +96,7 @@ export const posts = pgTable('posts', {
     index('searchtopPostsIndex').using('gin', table.engagementCount.desc(), sql`to_tsvector('english', ${table.text})`),
     index('searchLatestUserPostsIndex').on(table.userId, table.createdAt.desc()),
     index('searchTopUserPostsIndex').on(table.userId, table.engagementCount.desc()),
+    index('rootPostIndex').on(table.rootPostId)
 ]);
 
 export type Post = InferSelectModel<typeof posts> & {

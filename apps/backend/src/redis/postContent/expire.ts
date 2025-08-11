@@ -1,20 +1,45 @@
+import { SearchReply } from "redis"
 import { cachedPosts, postContentRedisKey, postHsetSchema, postLikersRedisKey } from "."
 import { Post, posts, PostToInsert } from "../../db/schema/posts"
 import { bulkUpdateFromValues } from "../../db/utils/bulkUpdate"
-import { currentTimeS, RedisMulti } from "../common"
+import { currentTimeS, postTTL, RedisMulti } from "../common"
 import { redisClient } from "../connect"
-import { toMap } from "../utilities"
 import { repliersRedisKey } from "./replies"
+import { typedHSet } from "../typedHSet"
+
+const minimizedPostColumns = ["id", "commentsExists", "likeCount", "replyCount", "clickCount", "viewCount"]
+
+type MiniPost = Pick<Post, "id" | "commentsExists" | "likeCount" | "replyCount" | "clickCount" | "viewCount">
+
+const minimizedPostHsetSchema = typedHSet<MiniPost>({
+    id: "string",
+    commentsExists: "boolean",
+    likeCount: "number",
+    replyCount: "number",
+    clickCount: "number",
+    viewCount: "number",
+})
 
 // General
 
 const maxCount = 1000
 
-export function touchPost(multi: RedisMulti, id: string) {
-    multi.hSet(
-        postContentRedisKey(id),
-        postHsetSchema.serializePartial({})
-    )
+/** Update the expiration of the post or the root post if this is a reply. */
+export function touchPost(multi: RedisMulti, post: Post) {
+    const updates = {
+        publicExpires: currentTimeS() + postTTL
+    }
+    if (post.rootPostId)
+        multi.hSet(
+            postContentRedisKey(post.rootPostId),
+            updates
+        )
+    else
+        multi.hSet(
+            postContentRedisKey(post.id),
+            updates
+        )
+
 }
 
 // Public
@@ -28,33 +53,35 @@ async function handlePostsPublicDataExpiration() {
     await multi.exec()
 }
 
-/** Prevent the comments from expiring while their parent post still exists. */
-async function excludeComments(expiredPosts: Post[]) {
-    // Get parent posts
-    const parentPostIds: string[] = []
-    for (const post of expiredPosts)
-        if (post.replyingTo) parentPostIds.push(post.replyingTo)
-    const parentPosts = await cachedPosts.read(parentPostIds)
-    // Remove the replies where the parent post has longer expiration
-    return expiredPosts.filter(r => {
-        if (!r.replyingTo) return true
-        const parentPost = parentPosts.get(r.replyingTo)
-        if (!parentPost) return true
-        const parentPostExpires = Math.max(parentPost.publicExpires || 0, parentPost.rankingExpires || 0)
-        return parentPostExpires <= (r.publicExpires || 0)
-    })
-}
-
 async function getPostsPublicDataToRemove() {
+    // Get expired root level posts
     const time = currentTimeS()
-    const query = `@publicExpires:[-inf ${time}] @commentsExpires:[-inf ${time}] @rankingExpires:[-inf ${time}]`;
-    const results = await redisClient.ft.search('posts', query, {
-        LIMIT: { from: 0, size: maxCount }
-    });
-    return await excludeComments(postHsetSchema.parseSearch(results))
+    const postResults = await redisClient.ft.search('posts',
+        `@publicExpires:[-inf ${time}] @rankingExpires:[-inf ${time}] @rootPostId:{}`,
+        {
+            LIMIT: { from: 0, size: maxCount },
+            RETURN: minimizedPostColumns
+        }
+    );
+    const expiredPosts = minimizedPostHsetSchema.parseSearch(postResults)
+    // Get their comments
+    const postsWithComments = expiredPosts.filter(p => p.commentsExists)
+    const multi = redisClient.multi()
+    for (const post in postsWithComments)
+        multi.ft.search('posts',
+            `@publicExpires:[-inf ${time}] @rankingExpires:[-inf ${time}] @rootPostId:{}`,
+            {
+                LIMIT: { from: 0, size: maxCount },
+                RETURN: minimizedPostColumns
+            }
+        );
+    const replyResults = await multi.exec() as (SearchReply | undefined)[]
+    const expiredReplies = replyResults.flatMap(r => r ? minimizedPostHsetSchema.parseSearch(r) : [])
+    // Merge post and replies arrays
+    return [...expiredPosts, ...expiredReplies]
 }
 
-async function savePostsPublicData(expiredPosts: Post[]) {
+async function savePostsPublicData(expiredPosts: MiniPost[]) {
     const updates: Partial<PostToInsert>[] = expiredPosts.map(p => ({
         id: p.id,
         likeCount: p.likeCount,
@@ -70,7 +97,7 @@ async function savePostsPublicData(expiredPosts: Post[]) {
     })
 }
 
-function removePostsPublicData(expiredPosts: Post[], multi: RedisMulti) {
+function removePostsPublicData(expiredPosts: MiniPost[], multi: RedisMulti) {
     for (const post of expiredPosts) {
         multi.del(postContentRedisKey(post.id))
         multi.del(repliersRedisKey(post.id))
@@ -90,12 +117,15 @@ async function getPostsRankedDataToRemove() {
     const time = currentTimeS()
     const query = `@rankingExists:{0} @rankingExpires:[-inf ${time}]`;
     const results = await redisClient.ft.search('posts', query, {
-        LIMIT: { from: 0, size: maxCount }
+        LIMIT: { from: 0, size: maxCount },
+        RETURN: minimizedPostColumns
     });
-    return postHsetSchema.parseSearch(results)
+    const posts = minimizedPostHsetSchema.parseSearch(results)
+    console.log(`Expiring ${posts.length} ranked posts.`)
+    return posts
 }
 
-function expirePostsRankingData(expiredPosts: Post[], multi: RedisMulti) {
+function expirePostsRankingData(expiredPosts: MiniPost[], multi: RedisMulti) {
     for (const post of expiredPosts) {
         multi.del(postLikersRedisKey(post.id))
     }
