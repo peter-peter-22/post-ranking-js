@@ -1,6 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { db } from "../../../../db"
-import { ClicksToInsert } from "../../../../db/schema/clicks"
 import { likes, LikeToInsert } from "../../../../db/schema/likes"
 import { HttpError } from "../../../../middlewares/errorHandler"
 import { cachedPosts } from "../../../../redis/postContent"

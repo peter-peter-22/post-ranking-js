@@ -1,6 +1,4 @@
-namespace cache ttl for posts
-fix setlikes, remove posterid from engagements
-prevent incrementing likers arrays on unranked posts
+
 remove pending posts
 remove unused db columns and indexes
 add redis persistence
