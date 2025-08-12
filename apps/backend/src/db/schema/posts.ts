@@ -13,7 +13,6 @@ import { ServerMedia } from '@me/schemas/src/zod/media';
 // Replies: rest of candidates: orderRepliesByScoreIndex
 // Main feed and relevant posts: trend candidates, counting keywords between date intervals for trend and cluster trend updates: recentPostsIndex
 // Posts and replies of a user, replies of engagement history: userContentsIndex
-// Deleting expired pending posts: pendingPostsIndex
 // Searching latest posts globally: searchLatestPostsIndex
 // Searching top posts globally: searchtopPostsIndex
 // Searching latest posts of user: searchLatestUserPostsIndex
@@ -55,8 +54,6 @@ export const posts = pgTable('posts', {
     keywords: keyword().notNull().array(),
     //mentioned user handles (listed even if not valid)
     mentions: varchar({ length: 50 }).notNull().array(),
-    //is the post published or not. pending posts need an id to define where their media is uploaded.
-    pending: boolean().notNull().default(false),
     //the files those belong to this post.
     media: jsonb().$type<ServerMedia[]>(),
     //score based on engagement rate to rank comments
@@ -89,7 +86,6 @@ export const posts = pgTable('posts', {
     index('recentPostsIndex').on(table.createdAt.desc()).where(isNull(table.replyingTo)),
     index('orderRepliesByScoreIndex').on(table.replyingTo, table.commentScore.desc(), table.createdAt.desc()).where(isNotNull(table.replyingTo)),
     index("recentPostsESimIndex").using("hnsw", table.timeBucket, table.embeddingNormalized.op("vector_l2_ops")),
-    index("pendingPostsIndex").on(table.createdAt.asc()).where(eq(table.pending, true)),
     index('searchLatestPostsIndex').using('gin', table.createdAt.desc(), sql`to_tsvector('english', ${table.text})`),
     index('searchtopPostsIndex').using('gin', table.engagementCount.desc(), sql`to_tsvector('english', ${table.text})`),
     index('searchLatestUserPostsIndex').on(table.userId, table.createdAt.desc()),

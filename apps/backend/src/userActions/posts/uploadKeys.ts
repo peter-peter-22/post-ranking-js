@@ -2,11 +2,11 @@ import { db } from "../../db";
 import { pendingUploads } from "../../db/schema/pendingUploads";
 import { mediaTransformerApi } from "../../objectStorage/mediaTransformer";
 import { ImageUploadOptions, VideoUploadOptions } from "../../objectStorage/uploadOptions";
-import crypto from "crypto";
+import { generateRandomKey } from "../../utilities/randomKey";
 
 /** Create an upload key for an image */
 export async function createImageUploadKey(userId: string, options: ImageUploadOptions, expiration: number) {
-    const key = generateRandomKey()
+    const key = generateUploadKey()
     await Promise.all([
         // Create upload key on the image transformer API
         mediaTransformerApi.post("/sign/image", {
@@ -36,7 +36,7 @@ export async function createImageUploadKey(userId: string, options: ImageUploadO
 
 /** Create an upload key for a video */
 export async function createVideoUploadKey(userId: string, options: VideoUploadOptions, expiration: number) {
-    const key = generateRandomKey()
+    const key = generateUploadKey()
     await Promise.all([
         // Create upload key on the image transformer API
         mediaTransformerApi.post("/sign/video", {
@@ -54,7 +54,6 @@ export async function createVideoUploadKey(userId: string, options: VideoUploadO
     return key
 }
 
-/** Generate a random string */
-function generateRandomKey() {
-    return crypto.randomBytes(100).toString('hex');
+export function generateUploadKey() {
+    return generateRandomKey(100)
 }

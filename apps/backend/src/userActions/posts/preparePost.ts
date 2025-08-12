@@ -1,12 +1,10 @@
 import { hashtagRegex, mentionRegex, urlRegex } from "@me/schemas/src/regex";
-import { eq } from "drizzle-orm";
 import emojiRegex from "emoji-regex";
-import { db } from "../../db";
 import { generateEmbeddingVectors } from "../../db/controllers/embedding";
-import { Post, posts, PostToInsert } from "../../db/schema/posts";
+import { Post, PostToInsert } from "../../db/schema/posts";
 import { HttpError } from "../../middlewares/errorHandler";
-import { normalizeVector } from "../../utilities/arrays/normalize";
 import { cachedPosts } from "../../redis/postContent";
+import { normalizeVector } from "../../utilities/arrays/normalize";
 
 /** Bulk prepare posts before insert. */
 export async function preparePosts(data: PostToInsert[]) {
@@ -59,7 +57,6 @@ export async function prepareReply(post: PostToInsert) {
     if (!post.replyingTo) throw new HttpError(422, "Invalid reply.")
     const repliedPost = await cachedPosts.readSingle(post.replyingTo)
     if (!repliedPost) throw new HttpError(404, "The replied post does not exists.")
-    post.repliedUser = repliedPost.userId
     post.rootPostId = repliedPost.rootPostId || repliedPost.id
     return { post, replied: repliedPost }
 }

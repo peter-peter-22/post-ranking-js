@@ -2,8 +2,6 @@ import { apiClient } from "../../api"
 import { CreateUploadKeyResponseSchema, uploadSignedFile } from "../../media/signedUpload"
 
 type PostUploadKeySettings = {
-    pendingPostId: string,
-    id: number,
     mimeType: string
 }
 

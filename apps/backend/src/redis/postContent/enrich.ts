@@ -10,7 +10,7 @@ import { getEngagementHistoryScores } from "../users/engagementHistory";
 import { getEnrichedUsers } from "../users/enrich";
 import { getFollowedReplierCounts } from "./replies";
 
-export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
+export async function enrichPostSet(posts: Map<string, Post>, viewer?: User) {
     // Format 
     const postIds: string[] = []
     const userIdSet: Set<string> = new Set()
@@ -71,7 +71,7 @@ export async function enrichPosts(posts: Map<string, Post>, viewer?: User) {
 }
 
 export async function getEnrichedPosts(ids: string[], viewer?: User) {
-    return await enrichPosts(
+    return await enrichPostSet(
         removeUndefinedMapValues(
             await cachedPosts.read(ids)
         ),
@@ -81,4 +81,12 @@ export async function getEnrichedPosts(ids: string[], viewer?: User) {
 
 export function postArrayToMap<T extends { id: string }>(posts: T[]): Map<string, T> {
     return new Map(posts.map(post => [post.id, post]))
-} 
+}
+
+export async function enrichPostArray(posts: Post[], viewer?: User) {
+    return await enrichPostSet(new Map(posts.map(post => [post.id, post])), viewer)
+}
+
+export async function enrichPost(post: Post, viewer?: User) {
+    return (await enrichPostArray([post], viewer))[0]
+}

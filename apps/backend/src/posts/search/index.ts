@@ -2,7 +2,7 @@ import { desc, lt } from "drizzle-orm"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
-import { enrichPosts, postArrayToMap } from "../../redis/postContent/enrich"
+import { enrichPostArray } from "../../redis/postContent/enrich"
 import { SingleDatePageParams } from "../common"
 import { postSearchQuery } from "./postSearchQuery"
 
@@ -31,7 +31,7 @@ export async function searchLatestPosts({
     const fetchedPosts = await q;
 
     // Enrich
-    const enrichedPosts = await enrichPosts(postArrayToMap(fetchedPosts), user)
+    const enrichedPosts = await enrichPostArray(fetchedPosts, user)
 
     // Get next page params
     const nextPageParams: SingleDatePageParams | undefined = enrichedPosts.length === postsPerRequest ? {
@@ -71,7 +71,7 @@ export async function searchTopPosts({
     const fetchedPosts = await q
 
     // Enrich
-    const enrichedPosts = await enrichPosts(postArrayToMap(fetchedPosts), user)
+    const enrichedPosts = await enrichPostArray(fetchedPosts, user)
 
     // Get next page params
     const nextPageParams: TopPostsPageParam | undefined = fetchedPosts.length === postsPerRequest ? {

@@ -46,7 +46,7 @@ export async function deleteMedia(deletedFiles: ServerMedia[]) {
 }
 
 /** Finalize the provided uploads */
-export async function addMedia(newUploads: ServerMedia[]) {
+export async function addMedia(newUploads: ServerMedia[],userId?:string) {
     if (newUploads.length === 0) return
     console.log(`Adding ${newUploads.length} files`)
     const bucketName = getBucketName(newUploads)
@@ -63,6 +63,11 @@ export async function addMedia(newUploads: ServerMedia[]) {
                 )
             ),
     ])
+    // Check media ownedship if necessary
+    if(userId) for(const file of validUploads){
+        if(file.userId!==userId)
+            throw new HttpError(401, `You don't own the file that you uploaded "${file.objectName}"`)
+    }
     // If the number of the deleted pending upload receipts is different from the number of media in the post, then they are invalid or expired.
     if (validUploads.length !== newUploads.length)
         throw new Error(`The uploaded files are invalid or expired. Uploaded file count: ${newUploads.length}, valid file count: ${validUploads.length}`)

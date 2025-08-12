@@ -5,7 +5,7 @@ import { escapeTagValue } from "../../redis/common"
 import { redisClient } from "../../redis/connect"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
 import { cachedPosts, postHsetSchema } from "../../redis/postContent"
-import { enrichPosts, postArrayToMap } from "../../redis/postContent/enrich"
+import { enrichPostArray, enrichPostSet, postArrayToMap } from "../../redis/postContent/enrich"
 import { repliersRedisKey } from "../../redis/postContent/replies"
 import { userFollowingRedisKey } from "../../redis/users/follows"
 import { deduplicatePosts, SingleDatePageParams } from "../common"
@@ -73,7 +73,7 @@ export async function getReplies({ user, pageParams, offset, postId }: { user: U
     }
 
     // Enrich posts
-    let enrichedReplies = await enrichPosts(postArrayToMap(allReplies), user)
+    let enrichedReplies = await enrichPostArray(allReplies, user)
 
     // Rank
     enrichedReplies = orderReplies(enrichedReplies, post.userId)

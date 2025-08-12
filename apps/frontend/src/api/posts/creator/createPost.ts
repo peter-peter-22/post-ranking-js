@@ -8,7 +8,7 @@ import { uploadImage, uploadVideo } from "./media";
 
 export type PostCreationSession = ReturnType<typeof createPostSession>
 
-export async function createPostWithoutMedia({
+export async function createPost({
     text,
     replyingTo,
     media
@@ -50,41 +50,19 @@ export async function updatePost({
 }
 
 export function createPostSession(editedPost?: PostToEdit) {
-    let hasUploadedMedia = false
-    let mediaCount = editedPost?.media?.length || 0
-    let pendingPostPromise: Promise<string> | undefined = undefined
-
-    const getPendingPost = async () => {
-        if (!pendingPostPromise) pendingPostPromise = createPendingPost()
-        return await pendingPostPromise
-    }
-
-    const getPostId = async () => {
-        if (editedPost) return editedPost.id
-        return await getPendingPost()
-    }
-
     const uploadFile = async (upload: MediaUpload) => {
-        // Mark that this post contains uploaded media. if true, the post will be finalized
-        hasUploadedMedia = true
         // Get local file
         const localData = upload.localData
         if (!localData) throw new Error("No local data")
         const uploadProcess = upload.uploadProcess
         if (!uploadProcess) throw new Error("No upload process")
-        // Get or create pending post
-        const pendingPostId = await getPostId()
-        // Increase the meida counter right before the upload to define the object key
-        mediaCount++
         // Get the file category
         const category = getFileCategory(localData.mimeType)
         // Upload the file using the function of it's category
         const uploadResponse = category === "image" ? (
             await uploadImage(
                 {
-                    pendingPostId: pendingPostId,
-                    id: mediaCount,
-                    mimeType: localData.mimeType,
+                    mimeType: localData.mimeType
                 },
                 localData.file,
                 (progress: number) => {
@@ -95,8 +73,6 @@ export function createPostSession(editedPost?: PostToEdit) {
         ) : (
             await uploadVideo(
                 {
-                    pendingPostId: pendingPostId,
-                    id: mediaCount,
                     mimeType: localData.mimeType,
                 },
                 localData.file,
@@ -115,12 +91,8 @@ export function createPostSession(editedPost?: PostToEdit) {
     const submitPost = async (data: PostFormData, replyingTo?: string) => {
         if (editedPost)
             return await updatePost({ ...data, id: editedPost.id })
-        if (hasUploadedMedia) {
-            const id = await getPostId()
-            return await finalizePost({ ...data, id, replyingTo })
-        }
         else {
-            return await createPostWithoutMedia({ ...data, replyingTo })
+            return await createPost({ ...data, replyingTo })
         }
     }
 

@@ -1,5 +1,3 @@
-
-remove pending posts
 remove unused db columns and indexes
 add redis persistence
 replace all recalculations with cache writes
@@ -10,7 +8,7 @@ cache notifications feed
 cache trend caclulation
 add the total engagement history of likers and commenters to posts. requirement: track likers in redis, implement aggregated engagement score
 apply changes to ranking params
-optimize media transfer
+optimize media transfer, add gpu support to ffmpeg
 replace all recalculations by saving the cached numbers
 separate full text search db
 use a redis ORM?
