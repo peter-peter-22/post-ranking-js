@@ -1,11 +1,11 @@
 import { SearchReply } from "redis"
-import { cachedPosts, postContentRedisKey, postHsetSchema, postLikersRedisKey } from "."
+import { postContentRedisKey, postLikersRedisKey } from "."
 import { Post, posts, PostToInsert } from "../../db/schema/posts"
 import { bulkUpdateFromValues } from "../../db/utils/bulkUpdate"
 import { currentTimeS, postTTL, RedisMulti } from "../common"
 import { redisClient } from "../connect"
-import { repliersRedisKey } from "./replies"
 import { typedHSet } from "../typedHSet"
+import { repliersRedisKey } from "./replies"
 
 const minimizedPostColumns = ["id", "commentsExists", "likeCount", "replyCount", "clickCount", "viewCount"]
 
@@ -57,7 +57,7 @@ async function getPostsPublicDataToRemove() {
     // Get expired root level posts
     const time = currentTimeS()
     const postResults = await redisClient.ft.search('posts',
-        `@publicExpires:[-inf ${time}] @rankingExpires:[-inf ${time}] @rootPostId:{}`,
+        `@publicExpires:[-inf ${time}] @rankingExpires:[-inf ${time}] @isReply:{0}`,
         {
             LIMIT: { from: 0, size: maxCount },
             RETURN: minimizedPostColumns
@@ -67,11 +67,10 @@ async function getPostsPublicDataToRemove() {
     // Get their comments
     const postsWithComments = expiredPosts.filter(p => p.commentsExists)
     const multi = redisClient.multi()
-    for (const post in postsWithComments)
+    for (const post of postsWithComments)
         multi.ft.search('posts',
-            `@publicExpires:[-inf ${time}] @rankingExpires:[-inf ${time}] @rootPostId:{}`,
+            `@rootPostId:{${post.id}}`,
             {
-                LIMIT: { from: 0, size: maxCount },
                 RETURN: minimizedPostColumns
             }
         );
