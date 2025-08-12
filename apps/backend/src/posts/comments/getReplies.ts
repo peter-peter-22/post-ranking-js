@@ -1,3 +1,4 @@
+import { PersonalPost } from "@me/schemas/src/zod/post"
 import { SearchReply } from "redis"
 import { User } from "../../db/schema/users"
 import { HttpError } from "../../middlewares/errorHandler"
@@ -5,11 +6,10 @@ import { escapeTagValue } from "../../redis/common"
 import { redisClient } from "../../redis/connect"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
 import { cachedPosts, postHsetSchema } from "../../redis/postContent"
-import { enrichPostArray, enrichPostSet, postArrayToMap } from "../../redis/postContent/enrich"
+import { enrichPostArray } from "../../redis/postContent/enrich"
 import { repliersRedisKey } from "../../redis/postContent/replies"
 import { userFollowingRedisKey } from "../../redis/users/follows"
 import { deduplicatePosts, SingleDatePageParams } from "../common"
-import { PersonalPost } from "@me/schemas/src/zod/post"
 
 export type CommentsPageParams = {
     latest?: SingleDatePageParams

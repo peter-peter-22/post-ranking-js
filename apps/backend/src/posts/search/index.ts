@@ -2,7 +2,7 @@ import { desc, lt } from "drizzle-orm"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
-import { enrichPostArray } from "../../redis/postContent/enrich"
+import { enrichPostArray, getEnrichedPosts } from "../../redis/postContent/enrich"
 import { SingleDatePageParams } from "../common"
 import { postSearchQuery } from "./postSearchQuery"
 
@@ -31,7 +31,7 @@ export async function searchLatestPosts({
     const fetchedPosts = await q;
 
     // Enrich
-    const enrichedPosts = await enrichPostArray(fetchedPosts, user)
+    const enrichedPosts = await getEnrichedPosts(fetchedPosts.map(p => p.id), user)
 
     // Get next page params
     const nextPageParams: SingleDatePageParams | undefined = enrichedPosts.length === postsPerRequest ? {
@@ -71,11 +71,11 @@ export async function searchTopPosts({
     const fetchedPosts = await q
 
     // Enrich
-    const enrichedPosts = await enrichPostArray(fetchedPosts, user)
+    const enrichedPosts = await getEnrichedPosts(fetchedPosts.map(p => p.id), user)
 
     // Get next page params
-    const nextPageParams: TopPostsPageParam | undefined = fetchedPosts.length === postsPerRequest ? {
-        maxEngagements: fetchedPosts[fetchedPosts.length - 1].likeCount
+    const nextPageParams: TopPostsPageParam | undefined = enrichedPosts.length === postsPerRequest ? {
+        maxEngagements: enrichedPosts[enrichedPosts.length - 1].likes
     } : undefined
 
     // Return the ranked posts and the page params

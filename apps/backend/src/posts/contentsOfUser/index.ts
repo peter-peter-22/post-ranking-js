@@ -3,9 +3,9 @@ import { db } from "../../db"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
-import { candidateColumns, SingleDatePageParams } from "../common"
+import { getEnrichedPosts } from "../../redis/postContent/enrich"
+import { SingleDatePageParams } from "../common"
 import { noPending } from "../filters"
-import { personalizePosts } from "../hydratePosts"
 
 export type UserContentsPageParams = {
     main?: SingleDatePageParams
@@ -22,7 +22,7 @@ export async function getUserContents({
     pageParams?: UserContentsPageParams,
     offset: number,
     targetUserId: string,
-    replies:boolean
+    replies: boolean
 }) {
     // Get if this is the first page
     const firstPage = offset === 0
@@ -35,7 +35,7 @@ export async function getUserContents({
         main: data?.pageParams,
     }
     // Return the ranked posts and the page params
-    return { data: data?.data||[], pageParams: allPageParams }
+    return { data: data?.data || [], pageParams: allPageParams }
 }
 
 /** Get the replies or posts of a user.  */
@@ -56,7 +56,7 @@ export async function userContentCandidates({
 
     // Query
     const q = db
-        .select(candidateColumns("Unknown"))
+        .select({ id: posts.id })
         .from(posts)
         .where(and(
             eq(posts.userId, targetUserId),
@@ -66,14 +66,14 @@ export async function userContentCandidates({
         ))
         .orderBy(desc(posts.createdAt))
         .limit(postsPerRequest)
-        .$dynamic()
+    const myPosts = await q
 
-    // Fetch
-    const myPosts = await personalizePosts(q, user)
+    // Enrich
+    const enrichedPosts = await getEnrichedPosts(myPosts.map(p => p.id), user)
 
     // Get next page params
-    const nextPageParams: SingleDatePageParams | undefined = myPosts.length === postsPerRequest ? {
-        maxDate: myPosts[myPosts.length - 1].createdAt.toISOString()
+    const nextPageParams: SingleDatePageParams | undefined = enrichedPosts.length === postsPerRequest ? {
+        maxDate: enrichedPosts[enrichedPosts.length - 1].createdAt.toISOString()
     } : undefined
 
     // Return

@@ -15,7 +15,7 @@ export function postSearchQuery({
     filter?: SQL
 }) {
     const q = db
-        .select()
+        .select({id:posts.id})
         .from(posts)
         .where(and(
             noPending(),

@@ -1,14 +1,15 @@
-remove unused db columns and indexes
-add redis persistence
-replace all recalculations with cache writes
+replace db lookups with redis indexes
 replace all occurences of personalizepost and post process post and indexed lookup
-fix the search feed, it displays posts without realtime engagements
+replace all recalculations with cache writes
+remove unused db columns and indexes
 do something with the snapshots, the engagement history snapshots are not updated
+check if the tag:{} filter of the post expiration query works
 cache notifications feed
 cache trend caclulation
 add the total engagement history of likers and commenters to posts. requirement: track likers in redis, implement aggregated engagement score
 apply changes to ranking params
+add redis persistence
 optimize media transfer, add gpu support to ffmpeg
-replace all recalculations by saving the cached numbers
-separate full text search db
+separate full text search db?
 use a redis ORM?
+restructure folders
