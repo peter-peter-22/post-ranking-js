@@ -17,6 +17,8 @@ export function userContentRedisKey(id: string) {
     return `user:${id}:content`;
 }
 
+export const onlineUsersRedisKey = "onlineUsers"
+
 export const userHsetSchema = typedHSet<User>({
     id: "string",
     handle: "string",

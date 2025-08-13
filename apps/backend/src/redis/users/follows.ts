@@ -5,13 +5,23 @@ import { createFollowNotification } from "../../db/controllers/notifications/cre
 import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
 import { Follow, follows } from "../../db/schema/follows"
 import { redisClient } from "../connect"
-import { followerCountJobs } from "../jobs/categories/followerCount"
-import { followingCountJobs } from "../jobs/categories/followingCount"
 import { jobQueue } from "../jobs/queue"
 import { RedisMulti } from "../common"
 
 export function userFollowingRedisKey(id: string) {
     return `user:${id}:following`
+}
+
+export function userFollowersRedisKey(id: string) {
+    return `user:${id}:followers`
+}
+
+export function temporalOnlineFollowersRedisKey(id: string) {
+    return `user:${id}:onlineFollowers`
+}
+
+export function userFollowedPostsRedisKey(id: string) {
+    return `user:${id}:postsFromFollowed`
 }
 
 /** Get which user ids are followed by a user.
@@ -52,12 +62,10 @@ async function handleFollowChange(updated: Follow, value: boolean) {
     multi.hIncrBy(userContentRedisKey(updated.followerId), "followingCount", add)
     if (add) multi.sAdd(userFollowingRedisKey(updated.followerId), updated.followedId)
     else multi.sRem(userFollowingRedisKey(updated.followerId), updated.followedId)
+    if (add) multi.sAdd(userFollowersRedisKey(updated.followedId), updated.followerId)
+    else multi.sRem(userFollowersRedisKey(updated.followedId), updated.followerId)
     await Promise.all([
         multi.exec(),
-        jobQueue.addBulk([
-            followerCountJobs.returnJob({ data: updated.followedId }),
-            followingCountJobs.returnJob({ data: updated.followerId })
-        ]),
         createFollowNotification(updated.followedId, updated.createdAt),
         createFollowSnapshot(updated.followerId, updated.followedId, value)
     ])

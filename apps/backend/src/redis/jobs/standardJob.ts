@@ -9,9 +9,9 @@ export function standardJob(options: Omit<JobCategoryOptions<string>, "deseriali
             deserializeData: data => data,
             ...options
         },
-        (data: JobCategoryData<string>): JobCategoryData<string> => {
-            data.key = data.data
-            return data
+        (job: JobCategoryData<string>): JobCategoryData<string> => {
+            job.key = job.data
+            return job
         }
     )
 }

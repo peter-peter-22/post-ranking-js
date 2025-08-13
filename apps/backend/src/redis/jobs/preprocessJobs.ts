@@ -1,13 +1,13 @@
 import { jobCategory, JobCategoryData, JobCategoryOptions } from "./queue"
 
-export function preprocessedJob<TData>(options: JobCategoryOptions<TData>, preprocess: (data: JobCategoryData<TData>) => JobCategoryData<TData>) {
+export function preprocessedJob<TData>(options: JobCategoryOptions<TData>, preprocess: (job: JobCategoryData<TData>) => JobCategoryData<TData>) {
     const { addJob, addJobs, returnJob, returnJobs, ...methods } = jobCategory<TData>(options)
 
     return {
-        addJob: (data: JobCategoryData<TData>) => addJob(preprocess(data)),
-        addJobs: (data: JobCategoryData<TData>[]) => addJobs(data.map(preprocess)),
-        returnJob: (data: JobCategoryData<TData>) => returnJob(preprocess(data)),
-        returnJobs: (data: JobCategoryData<TData>[]) => returnJobs(data.map(preprocess)),
+        addJob: (job: JobCategoryData<TData>) => addJob(preprocess(job)),
+        addJobs: (job: JobCategoryData<TData>[]) => addJobs(job.map(preprocess)),
+        returnJob: (job: JobCategoryData<TData>) => returnJob(preprocess(job)),
+        returnJobs: (job: JobCategoryData<TData>[]) => returnJobs(job.map(preprocess)),
         ...methods
     }
 }

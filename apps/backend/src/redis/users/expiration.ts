@@ -1,5 +1,5 @@
 import { SearchReply } from "redis";
-import { userContentRedisKey, userHsetSchema } from ".";
+import { onlineUsersRedisKey, userContentRedisKey, userHsetSchema } from ".";
 import { db } from "../../db";
 import { engagementHistory } from "../../db/schema/engagementHistory";
 import { User, users } from "../../db/schema/users";
@@ -7,9 +7,9 @@ import { bulkUpdateFromValues } from "../../db/utils/bulkUpdate";
 import { currentTimeS, RedisMulti, userPersonalTTL, userTTL } from "../common";
 import { redisClient } from "../connect";
 import { CachedEngagementCounts, engagementHistoryHsetSchema, userEngagementHistoryRedisKey, userEngagementHistoryScoresRedisKey } from "./engagementHistory";
-import { userFollowingRedisKey } from "./follows";
+import { userFollowersRedisKey, userFollowingRedisKey } from "./follows";
 
-const maxCount=1000
+const maxCount = 1000
 
 export function touchUser(multi: RedisMulti, id: string) {
     multi.hSet(
@@ -30,6 +30,8 @@ export function setPrivateUserDataExistence(multi: RedisMulti, id: string, value
         userContentRedisKey(id),
         userHsetSchema.serializePartial({ privateExists: value })
     )
+    if (value) multi.sAdd(onlineUsersRedisKey, id)
+    else multi.sRem(onlineUsersRedisKey, id)
 }
 
 async function handleUserExpiration() {
@@ -95,7 +97,8 @@ async function removeUserPersinalDataCache(usersToRemove: User[], EHs: CachedEng
     for (const user of usersToRemove) {
         multi.del(userFollowingRedisKey(user.id))
         multi.del(userEngagementHistoryScoresRedisKey(user.id))
-        multi.hSet(userContentRedisKey(user.id), userHsetSchema.serializePartial({ privateExists: false }))
+        multi.del(userFollowersRedisKey(user.id))
+        setPrivateUserDataExistence(multi, user.id, false)
     }
     for (const eh of EHs) {
         multi.del(userEngagementHistoryRedisKey(eh.viewerId, eh.publisherId, eh.timeBucket))
