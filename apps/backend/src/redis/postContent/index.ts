@@ -84,7 +84,7 @@ async function generatePostCache(postIds: string[]) {
     await multi.exec()
 
     // Filter out the posts those need ranking data
-    const currentTime = new Date().getTime()
+    const currentTime = Date.now()
     const needRanking = postsOnly.filter(post => {
         const age = currentTime - new Date(post.createdAt).getTime()
         return age < mainFeedMaxAge

@@ -64,7 +64,7 @@ router.post('/video', async (req: Request, res: Response) => {
 });
 
 function generateUploadName() {
-    return new Date().getTime() + "_" + generateRandomKey(20)
+    return Date.now() + "_" + generateRandomKey(20)
 }
 
 export default router;

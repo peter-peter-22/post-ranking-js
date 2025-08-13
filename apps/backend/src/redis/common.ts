@@ -24,7 +24,7 @@ export function escapeTagValue(value: string): string {
 
 /** Return the current time in seconds. */
 export function currentTimeS() {
-    return new Date().getTime() / 1000
+    return Date.now() / 1000
 }
 
 await initializeRedisSearch()

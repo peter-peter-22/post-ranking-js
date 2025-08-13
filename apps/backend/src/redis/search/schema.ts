@@ -8,11 +8,13 @@ export async function initializeRedisSearch() {
   await createIndexIfNotExists("posts",
     async (name) => {
       await redisClient.ft.create(name, {
+        text: { type: SchemaFieldTypes.TEXT },
         replyingTo: { type: SchemaFieldTypes.TAG },
         userId: { type: SchemaFieldTypes.TAG },
         createdAt: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
         rootPostId: { type: SchemaFieldTypes.TAG },
-        // Expiration and anchors
+        isReply:{type:SchemaFieldTypes.TAG},
+        // Expiration and anchors,
         publicExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
         rankingExists: { type: SchemaFieldTypes.TAG },
         rankingExpires: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },

@@ -13,3 +13,5 @@ optimize media transfer, add gpu support to ffmpeg
 separate full text search db?
 use a redis ORM?
 restructure folders
+cache first page of user contents?
+optimize post fanouts with redis gears?

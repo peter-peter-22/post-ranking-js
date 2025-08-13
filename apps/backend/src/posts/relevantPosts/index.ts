@@ -1,46 +1,45 @@
-import { eq } from "drizzle-orm";
-import { db } from "../../db";
-import { posts } from "../../db/schema/posts";
+import { Post } from "../../db/schema/posts";
 import { User } from "../../db/schema/users";
 import { HttpError } from "../../middlewares/errorHandler";
+import { cachedPosts } from "../../redis/postContent";
+import { enrichPostArray } from "../../redis/postContent/enrich";
+import { deduplicatePosts, SingleDatePageParams } from "../common";
 import { ESimPageParams } from "../forYou/candidates/embedding";
-import { getTrendCandidates } from "../forYou/candidates/trending";
-import { postProcessPosts } from "../postProcessPosts";
+import { getKeywordCandidates } from "../forYou/candidates/keywords";
 import { rankPosts } from "../ranker";
 import { getPostEmbeddingSimilarityCandidates } from "./candidates/embedding";
-import { DatePageParams } from "../common";
 
 export type RelevantPostsPageParams = {
-    trends?: DatePageParams,
+    trends?: SingleDatePageParams,
     embedding?: ESimPageParams,
 }
 
 /** Get posts from the main feed of a user. */
 export async function getRelevantPosts({ user, pageParams, offset, postId }: { user: User, pageParams?: RelevantPostsPageParams, offset: number, postId: string }) {
     // Select the main post
-    const [post] = await db.select().from(posts).where(eq(posts.id, postId))
+    const post = await cachedPosts.readSingle(postId)
     if (!post)
         throw new HttpError(404, "Post not found")
     // Common data
     const firstPage = !offset
     // Get the candidate posts
-    const [trendPosts, embeddingPosts] = await Promise.all([
-        getTrendCandidates({ trends: post.keywords ?? [], user, count: 30, pageParams: pageParams?.trends, firstPage }),
+    const results = await Promise.all([
+        getKeywordCandidates({ keywords: post.keywords ?? [], user, count: 30, pageParams: pageParams?.trends, firstPage }),
         getPostEmbeddingSimilarityCandidates({ user, count: 30, pageParams: pageParams?.embedding, firstPage, skipped: offset, maxDistance: 1, vectorNormalized: post.embeddingNormalized }),
     ])
+    const [trendPosts, embeddingPosts] = results
     // Merge the posts
-    let allPosts = mergePostArrays([trendPosts?.posts, embeddingPosts?.posts])
-    // Exit if no posts
+    const allPosts: Post[] = deduplicatePosts(results.map(e => e?.posts || []).flat())
     if (allPosts.length === 0) return
-    // Deduplicate
-    allPosts = deduplicatePersonalPosts(allPosts)
+    // Enrich
+    const enrichedPosts = await enrichPostArray(allPosts, user)
     // Merge page params
     const allPageParams: RelevantPostsPageParams = {
         trends: trendPosts?.pageParams,
         embedding: embeddingPosts?.pageParams,
     }
     // Rank
-    allPosts = await rankPosts(allPosts)
+    const rankedPosts = await rankPosts(enrichedPosts)
     // Return the ranked posts and the page params
-    return { posts: await postProcessPosts(allPosts), pageParams: allPageParams }
+    return { posts: rankedPosts, pageParams: allPageParams }
 }

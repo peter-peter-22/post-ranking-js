@@ -5,11 +5,6 @@ export const BasicFeedSchema = z.object({
     offset: z.number().default(0)
 })
 
-export type DatePageParams = {
-    skipStart: string,
-    skipEnd: string
-}
-
 export type SingleDatePageParams = {
     maxDate: string
 }

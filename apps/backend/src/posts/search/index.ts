@@ -2,7 +2,7 @@ import { desc, lt } from "drizzle-orm"
 import { posts } from "../../db/schema/posts"
 import { User } from "../../db/schema/users"
 import { postsPerRequest } from "../../redis/feeds/postFeeds/common"
-import { enrichPostArray, getEnrichedPosts } from "../../redis/postContent/enrich"
+import { getEnrichedPosts } from "../../redis/postContent/enrich"
 import { SingleDatePageParams } from "../common"
 import { postSearchQuery } from "./postSearchQuery"
 
