@@ -7,7 +7,7 @@ import { bulkUpdateFromValues } from "../../db/utils/bulkUpdate";
 import { currentTimeS, RedisMulti, userPersonalTTL, userTTL } from "../common";
 import { redisClient } from "../connect";
 import { CachedEngagementCounts, engagementHistoryHsetSchema, userEngagementHistoryRedisKey, userEngagementHistoryScoresRedisKey } from "./engagementHistory";
-import { userFollowersRedisKey, userFollowingRedisKey } from "./follows";
+import { userFollowedPostsRedisKey, userFollowersRedisKey, userFollowingRedisKey } from "./follows";
 
 const maxCount = 1000
 
@@ -37,8 +37,6 @@ export function setPrivateUserDataExistence(multi: RedisMulti, id: string, value
 async function handleUserExpiration() {
     // Get the expired users
     const usersToRemove = await getUsersToRemove()
-    // Handle the private data of the expired users
-    await handleExpiredUsersPrivateData(usersToRemove)
     // Save realtime data
     await saveUserRealtimeData(usersToRemove)
     // Remove from redis
@@ -98,6 +96,7 @@ async function removeUserPersinalDataCache(usersToRemove: User[], EHs: CachedEng
         multi.del(userFollowingRedisKey(user.id))
         multi.del(userEngagementHistoryScoresRedisKey(user.id))
         multi.del(userFollowersRedisKey(user.id))
+        multi.del(userFollowedPostsRedisKey(user.id))
         setPrivateUserDataExistence(multi, user.id, false)
     }
     for (const eh of EHs) {

@@ -6,6 +6,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { redisClient } from './redis/connect';
 import { jobQueue, worker } from './redis/jobs/queue';
 import routes from "./routes";
+import { hazelClient } from './hazelcast/connect';
 
 const app = express();
 const PORT = 3000;
@@ -22,7 +23,7 @@ app.use(errorHandler);
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 // Close connections on shutdown
@@ -32,7 +33,8 @@ function shutdown() {
     redisClient.quit(),
     jobQueue.close(),
     worker.close(),
-    db.$client.end()
+    db.$client.end(),
+    hazelClient.shutdown()
   ])
     .then(() => {
       console.log('Connections closed.');

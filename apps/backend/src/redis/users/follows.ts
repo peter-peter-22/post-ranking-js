@@ -1,12 +1,12 @@
 import { and, eq } from "drizzle-orm"
-import { userContentRedisKey } from "."
+import { onlineUsersRedisKey, userContentRedisKey } from "."
 import { db } from "../../db"
 import { createFollowNotification } from "../../db/controllers/notifications/createNotification"
 import { createFollowSnapshot } from "../../db/controllers/users/follow/snapshots"
 import { Follow, follows } from "../../db/schema/follows"
 import { redisClient } from "../connect"
 import { jobQueue } from "../jobs/queue"
-import { RedisMulti } from "../common"
+import { onlineFollwersListTTL, RedisMulti } from "../common"
 
 export function userFollowingRedisKey(id: string) {
     return `user:${id}:following`
@@ -30,6 +30,15 @@ export function userFollowedPostsRedisKey(id: string) {
 export async function cachedFollowStatus(userId: string, targetUserIds: string[], multi: RedisMulti) {
     const key = userFollowingRedisKey(userId)
     multi.smIsMember(key, targetUserIds)
+}
+
+/** Calculates the online followers array in redis. */
+export async function calculateOnlineFollowers(userId: string) {
+    const key = temporalOnlineFollowersRedisKey(userId)
+    const multi = redisClient.multi()
+    multi.sInterStore(key, [userFollowersRedisKey(userId), onlineUsersRedisKey])
+    multi.expire(key, onlineFollwersListTTL)
+    await multi.exec()
 }
 
 /** Set cached data after a follow happens.

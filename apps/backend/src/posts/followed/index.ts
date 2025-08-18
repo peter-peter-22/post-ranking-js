@@ -1,10 +1,10 @@
 import { User } from "../../db/schema/users";
-import { DatePageParams } from "../common";
+import { SingleDatePageParams } from "../common";
 import { getFollowedCandidates } from "../forYou/candidates/followed";
 import { rankPosts } from "../ranker";
 
 export type FollowedPostsPageParams = {
-    followed?: DatePageParams,
+    followed?: SingleDatePageParams,
 }
 
 /** Get posts from the main feed of a user */

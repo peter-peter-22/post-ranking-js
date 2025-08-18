@@ -22,33 +22,7 @@ export async function getFollowedCandidates({
     if (!firstPage && !pageParams) return
 
     // Get the posts
-    const q = db
-        .select(candidateColumns("Followed"))
-        .from(posts)
-        .where(
-            and(
-                pageParams && or(
-                    gt(posts.createdAt, new Date(pageParams.skipStart)),
-                    lt(posts.createdAt, new Date(pageParams.skipEnd))
-                ),
-                recencyFilter(),
-                isPost(),
-                noPending(),
-                exists(
-                    db
-                        .select()
-                        .from(follows)
-                        .where(and(
-                            eq(follows.followerId, user.id),
-                            eq(follows.followedId, posts.userId)
-                        ))
-                )
-            )
-        )
-        .orderBy(desc(posts.createdAt))
-        .limit(count)
-        .$dynamic()
-    const myPosts = await personalizePosts(q, user)
+    
 
     // Get next page params
     const nextPageParams: DatePageParams | undefined = myPosts.length === count ? {

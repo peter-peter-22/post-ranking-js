@@ -1,5 +1,5 @@
 import { redisClient } from "../../connect";
-import { userFollowedPostsRedisKey, userFollowersRedisKey, userFollowingRedisKey } from "../../users/follows";
+import { calculateOnlineFollowers, temporalOnlineFollowersRedisKey, userFollowedPostsRedisKey } from "../../users/follows";
 import { jsonJob } from "../jsonJob";
 
 type PostFanoutData = {
@@ -13,7 +13,8 @@ export const fanoutPostToFollowers = jsonJob<PostFanoutData>(
     {
         name: "fanoutPostToFollowers",
         handler: async ({ userId, postId }) => {
-            const iterator = await redisClient.sScanIterator(userFollowersRedisKey(userId), { COUNT: batchSize });
+            await calculateOnlineFollowers(userId)
+            const iterator = await redisClient.sScanIterator(temporalOnlineFollowersRedisKey(userId), { COUNT: batchSize });
             const currentBatch: string[] = []
             for await (const followerId of iterator) {
                 currentBatch.push(followerId)

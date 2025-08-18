@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.js",
+    "start": "tsx src/index.ts",
     "dev": "nodemon --inspect=0.0.0.0 --exec tsx src/index.ts",
     "studio": "drizzle-kit studio",
     "generate": "drizzle-kit generate",
@@ -28,6 +28,7 @@
     "emoji-regex": "^10.4.0",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
+    "hazelcast-client": "^5.3.0",
     "mathjs": "^14.4.0",
     "minio": "^8.0.5",
     "pg": "^8.16.0",

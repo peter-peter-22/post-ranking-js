@@ -49,7 +49,6 @@ async function handlePostsPublicDataExpiration() {
     await savePostsPublicData(expiredPosts)
     const multi = redisClient.multi()
     removePostsPublicData(expiredPosts, multi)
-    expirePostsRankingData(expiredPosts, multi)
     await multi.exec()
 }
 

@@ -6,7 +6,7 @@ import { db } from '../../../db';
 import { PersonalUser, personalUserColumns } from '../../../db/controllers/users/getUser';
 import { postProcessUsers } from '../../../db/controllers/users/postProcessUsers';
 import { follows } from '../../../db/schema/follows';
-import { userColumns, UserCommon, users } from '../../../db/schema/users';
+import { userColumns, UserClient, users } from '../../../db/schema/users';
 import { HttpError } from '../../../middlewares/errorHandler';
 import { BasicFeedSchema, SingleDatePageParams } from '../../../posts/common';
 import { getPaginatedData } from '../../../redis/pagination';
@@ -46,7 +46,7 @@ async function listFollowers({
 }: {
     offset?: number,
     targetUserId: string,
-    viewer: UserCommon,
+    viewer: UserClient,
     pageParams?: SingleDatePageParams
 }) {
     if (offset !== 0 && !pageParams) return
@@ -100,7 +100,7 @@ async function listFollowed({
 }: {
     offset?: number,
     targetUserId: string,
-    viewer: UserCommon,
+    viewer: UserClient,
     pageParams?: SingleDatePageParams
 }) {
     if (offset !== 0 && !pageParams) return

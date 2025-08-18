@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { Request } from 'express';
 import { db } from '../db';
-import { User, userColumns, UserCommon, users } from '../db/schema/users';
+import { User, userColumns, UserClient, users } from '../db/schema/users';
 import { HttpError } from '../middlewares/errorHandler';
 import { escapeTagValue } from '../redis/common';
 import { redisClient } from '../redis/connect';
@@ -70,7 +70,6 @@ export async function authUser(userhandle: string): Promise<User | undefined> {
         await ensureUserPersonalData(user)
         // Update expirations
         const multi = redisClient.multi()
-        touchUser(multi, user.id)
         touchOnlineUser(multi, user.id)
         await multi.exec()
     }
@@ -78,7 +77,7 @@ export async function authUser(userhandle: string): Promise<User | undefined> {
 }
 
 /** Get the common user from the db based on the handle. */
-export async function authUserCommon(userhandle: string): Promise<UserCommon | undefined> {
+export async function authUserCommon(userhandle: string): Promise<UserClient | undefined> {
     const user = (
         await db.select(userColumns)
             .from(users)

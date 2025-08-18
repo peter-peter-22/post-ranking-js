@@ -6,9 +6,9 @@ import { follows } from "../../schema/follows"
 import { likes } from "../../schema/likes"
 import { notifications } from "../../schema/notifications"
 import { posts } from "../../schema/posts"
-import { UserCommon, users } from "../../schema/users"
+import { UserClient, users } from "../../schema/users"
 
-export async function notificationTest(viewer: UserCommon) {
+export async function notificationTest(viewer: UserClient) {
     const post = await insertPost({ userId: viewer.id, text: "notification test" })
     await db.delete(notifications)
     await db.delete(posts).where(eq(posts.replyingTo, post.id))

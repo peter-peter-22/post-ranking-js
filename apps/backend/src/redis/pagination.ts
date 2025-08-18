@@ -1,4 +1,4 @@
-import { UserCommon } from "../db/schema/users"
+import { UserClient } from "../db/schema/users"
 import { HttpError } from "../middlewares/errorHandler"
 import { redisClient } from "./connect"
 
@@ -11,7 +11,7 @@ export async function getPaginatedData<TPageParams,TData>({
 }: {
     getMore: (pageParams?: TPageParams) => Promise<{ data: TData, pageParams?: TPageParams } | undefined>,
     feedName: string,
-    user: UserCommon,
+    user: UserClient,
     offset: number,
     ttl: number
 }) {

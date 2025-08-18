@@ -1,6 +1,6 @@
 import { EngagementHistory } from "../db/schema/engagementHistory"
 import { Post } from "../db/schema/posts"
-import { User, UserCommon } from "../db/schema/users"
+import { User, UserClient } from "../db/schema/users"
 import { lerp } from "../utilities/math/lerp"
 
 export type ViewerPublisherRelationship = {
@@ -12,7 +12,7 @@ export type ViewerPublisherRelationship = {
 
 export type Engagement = {
     post: Post,
-    user: UserCommon,
+    user: UserClient,
     like: boolean,
     reply: boolean,
     click: boolean,

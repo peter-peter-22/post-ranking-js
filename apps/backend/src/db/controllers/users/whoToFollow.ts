@@ -2,12 +2,12 @@ import { and, desc, eq, notExists } from "drizzle-orm";
 import { db } from "../..";
 import { engagementHistory } from "../../schema/engagementHistory";
 import { follows } from "../../schema/follows";
-import { UserCommon, users } from "../../schema/users";
+import { UserClient, users } from "../../schema/users";
 import { personalUserColumns } from "./getUser";
 import { postProcessUsers } from "./postProcessUsers";
 
 /** Get the top engaged but not followed users */
-export async function getWhoToFollow(user: UserCommon,limit:number=3,offset:number=0) {
+export async function getWhoToFollow(user: UserClient,limit:number=3,offset:number=0) {
     return await postProcessUsers(
         await db
             .select(personalUserColumns(user.id))

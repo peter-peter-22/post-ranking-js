@@ -6,6 +6,7 @@ export const defaultDataFeedTTL = 60 * 30
 export const postTTL = defaultDataFeedTTL
 export const userTTL = 60 * 60
 export const userPersonalTTL = 60 * 60
+export const onlineFollwersListTTL=30
 
 export function getMainFeedExpiration(createdAt: Date) {
     return Math.round((new Date(createdAt).getTime() + mainFeedMaxAge) / 1000)

@@ -101,6 +101,8 @@ export async function generateOnlineUserCache(newUsers: User[]) {
             const key = userEngagementHistoryScoresRedisKey(user.id)
             multi.zAdd(key, myTotalEngagementHistories.map(eh => ({ value: eh.publisherId, score: getEngagementHistoryScore(eh) })))
         }
+        // Followed posts
+
         // Notifications
     }
     await multi.exec()
@@ -112,6 +114,7 @@ async function getOnlineUserData(newUsers: User[]) {
         await db.select().from(follows).where(inArray(follows.followerId, userIds)),
         await loadAggregatedEngagementHistory(userIds),
         await loadCurrentEngagementHistory(userIds),
+
     ])
     const followsPerUser = toMap(
         totalFollows,
@@ -132,4 +135,8 @@ async function getOnlineUserData(newUsers: User[]) {
 export async function ensureUserPersonalData(user: User) {
     if (!user.privateExists)
         await generateOnlineUserCache([user])
+}
+
+async function getFollowedPosts(userId:string[]){
+    return 
 }

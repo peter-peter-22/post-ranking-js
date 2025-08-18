@@ -11,12 +11,17 @@ import { typedHSet } from "../typedHSet";
 import { toMap } from "../utilities";
 import { cachedReplyWrite, getReplies } from "./replies";
 import { mainFeedMaxAge } from "../../posts/filters";
+import { fanoutPostToFollowers } from "../jobs/categories/postFanoutToFollowers";
 
 export function postContentRedisKey(id: string) {
     return `post:${id}:content`;
 }
 
 export function postLikersRedisKey(id: string) {
+    return `post:${id}:likers`
+}
+
+export function postsOfUserRedisKey(id: string) {
     return `post:${id}:likers`
 }
 
@@ -154,26 +159,35 @@ async function generateRankedPostCache(newPosts: Post[]) {
  * When a new post is inserted, mark all namespaces as existing to prevent unnecessary fallbacks. 
  */
 export async function handlePostInsert({ post, replied }: PreparedPost) {
-    const multi = redisClient.multi()
+    const promises: Promise<any>[] = []
+
     if (post.replyingTo && replied) {
+        // Cache reply
+        const multi = redisClient.multi()
         cachedReplyWrite([{ ...post, commentsExists: true }], replied, multi)
+        promises.push(multi.exec())
+        // Handle Engagement updates
+        processEngagementUpdates(post.userId, {
+            replies: [{
+                post: post,
+                date: post.createdAt,
+                value: true
+            }]
+        })
     }
     else {
+        // Cache post
+        const multi = redisClient.multi()
         cachedPostWrite([{
             ...post,
             rankingExpires: getMainFeedExpiration(post.createdAt),
             rankingExists: true,
             commentsExists: true
         }], multi)
+        promises.push(multi.exec())
+        // Handle fanout
+        promises.push(fanoutPostToFollowers.addJob({ data: { userId: post.userId, postId: post.userId } }))
     }
-    await Promise.all([
-        multi.exec(),
-        post.replyingTo ? processEngagementUpdates(post.userId, {
-            replies: [{
-                post: post,
-                date: post.createdAt,
-                value: true
-            }]
-        }) : undefined,
-    ])
+
+    await Promise.all(promises)
 }

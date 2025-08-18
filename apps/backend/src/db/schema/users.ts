@@ -29,14 +29,10 @@ export const users = pgTable('users', {
     index().on(t.handle, t.followerCount.desc()) //mention prediction
 ]);
 
-export type User = InferSelectModel<typeof users> & {
-    publicExpires?: number,
-    privateExpires?: number,
-    privateExists?: boolean
-};
+export type User = InferSelectModel<typeof users>;
 
 export type UserToInsert = InferInsertModel<typeof users>;
 
 const { embedding, embeddingNormalized, bot, fullName, interests, ...userColumns } = getTableColumns(users)
 export { userColumns };
-export type UserCommon = Pick<User, keyof typeof userColumns>;
+export type UserClient = Pick<User, keyof typeof userColumns>;
