@@ -1,14 +1,13 @@
-import { db } from "../../db";
-import { User, users } from "../../db/schema/users";
+import { User } from "../../db/schema/users";
 import { hazelClient } from "../connect";
 
 export type CachedUser = Pick<User, "id" | "avatar" | "banner" | "bio" | "followerCount" | "followingCount" | "handle" | "name" | "createdAt" | "embedding">
 
-export type CachedUserSerialized = Pick<User, "id" | "avatar" | "banner" | "bio" | "followerCount" | "followingCount" | "handle" | "name"> & { createdAt: number, embedding: string | null }
+export type CachedUserSerialized = Pick<User, "avatar" | "banner" | "bio" | "followerCount" | "followingCount" | "handle" | "name"> & { createdAt: number, embedding: string | null, __key: string }
 
 await hazelClient.getSql().execute(`
 CREATE OR REPLACE MAPPING users (
-    __key VARCHAR,             
+    __key VARCHAR,     
     name VARCHAR,
     createdAt BIGINT,
     profilePicture JSON,
@@ -21,23 +20,11 @@ OPTIONS (
 )
 `);
 
-const usersMap = await hazelClient.getMap<string, CachedUserSerialized>('users');
-
-// 3. Insert data
-const testUsers = await db.select().from(users).limit(10)
-
-const serialized = testUsers.map(serializeUser)
-await usersMap.putAll(serialized.map(u => [u.id, u]))
-
-// 4. Query
-const result = await hazelClient.getSql().execute('SELECT * FROM users');
-for await (const row of result) {
-    console.log(row);
-}
+export const usersMap = await hazelClient.getMap<string, CachedUserSerialized>('users');
 
 export function serializeUser({ createdAt, embedding, id, name, handle, bio, avatar, banner, followerCount, followingCount }: CachedUser): CachedUserSerialized {
     return {
-        id,
+        __key: id,
         name,
         handle,
         bio,
@@ -50,9 +37,10 @@ export function serializeUser({ createdAt, embedding, id, name, handle, bio, ava
     }
 }
 
-export function deserializeUser({ createdAt, embedding, ...rest }: CachedUserSerialized): CachedUser {
+export function deserializeUser({ createdAt, embedding, __key, ...rest }: CachedUserSerialized): CachedUser {
     return {
         ...rest,
+        id: __key,
         createdAt: new Date(createdAt),
         embedding: embedding ? JSON.parse(embedding) : null
     }
