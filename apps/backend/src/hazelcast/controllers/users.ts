@@ -11,7 +11,6 @@ export async function getCachedUsersById(ids: string[]) {
     if (cached.length === ids.length) return map
 
     // Fallback to db
-    const cold=
 }
 
 export async function getCachedUsersByHandle(handles: string[]) {

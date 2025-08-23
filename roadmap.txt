@@ -1,4 +1,4 @@
-replace db lookups with redis indexes
+add near cache
 replace all occurences of personalizepost and post process post and indexed lookup
 replace all recalculations with cache writes
 remove unused db columns and indexes
